@@ -1,0 +1,81 @@
+* { box-sizing: border-box; }
+body, html {
+  margin: 0; padding: 0; height: 100%;
+  display: flex; flex-direction: column;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #fafafa; color: #111;
+}
+#topbar {
+  background: #333; color: #fff;
+  display: flex; gap: 6px; padding: 8px; align-items: center;
+  overflow-x: auto; flex-wrap: nowrap;
+  scrollbar-gutter: stable;
+}
+.tab {
+  background: #555; color: #fff;
+  padding: 6px 14px;
+  border: none; border-radius: 4px;
+  cursor: pointer; font-size: 1rem;
+  display: inline-flex; align-items: center;
+  flex: 0 0 auto;
+}
+.tab:hover { background: #777; }
+#container {
+  flex: 1; display: flex; min-height: 0;
+}
+.sidebar {
+  width: 13%; background: #eee;
+  display: flex; flex-direction: column;
+  padding: 8px; overflow: auto;
+  border-right: 1px solid #ccc;
+  min-width: 160px;
+}
+.sidebar button {
+  margin-bottom: 6px; padding: 6px;
+  text-align: left;
+  border: 1px solid #bbb; background: #fff;
+  cursor: pointer; border-radius: 4px;
+  font-size: .85rem; transition: .15s;
+}
+.sidebar button:hover { background: #e6e6e6; }
+#viewer {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  overflow: hidden; position: relative; background: transparent; min-height: 0;
+}
+#viewer embed, #viewer iframe {
+  width: 100%; height: 100%; border: none;
+  object-fit: contain; display: block; background: #fff;
+}
+#viewer img {
+  max-width: 75%; max-height: 75%;
+}
+#topbar a.tab {
+  text-decoration: none;
+}
+@media (max-width: 720px) and (orientation: portrait) {
+  #container { flex-direction: column; }
+  #viewer { order: 0; }
+  .sidebar {
+    width: 100%; order: 1;
+    flex-wrap: wrap;
+    gap: 6px 8px; overflow-x: auto; overflow-y: hidden;
+    padding: 6px; border-top: 1px solid #ccc;
+    max-height: calc(3 * 1.2em + 6px + 6px);
+    align-items: flex-start;
+  }
+  .sidebar button {
+    margin: 0; padding: 0 10px;
+    white-space: normal;
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    font-size: .85rem; line-height: 1.2em;
+    height: calc(3 * 1.2em + 6px);
+    text-align: center;
+    gap: 1px;
+    max-width: 70%;
+  }
+  #viewer img {
+    max-width: 100%; max-height: 100%;
+  }
+}
