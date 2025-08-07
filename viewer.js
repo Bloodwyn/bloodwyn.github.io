@@ -20,7 +20,7 @@ function loadFromHash() {
         document.querySelector('.sidebar button').click();
         return;
     }
-    const page = location.pathname.split('/').pop().replace('.html', '');
+    const page = location.pathname.includes('.html') ? location.pathname.split('/').pop().replace('.html', '') : 'index';
     file = `${page}/${hash}`;
 
     const ext = file.split('.').pop().toLowerCase();
