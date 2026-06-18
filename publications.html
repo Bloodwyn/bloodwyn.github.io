@@ -5,6 +5,7 @@
   <title>Bastian Kuth - Publications</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 </head>
 <body>
   <div id="topbar">
@@ -15,20 +16,226 @@
   </div>
   <div id="container">
     <div class="sidebar">
-      <button onclick="location.hash='beziersubdiv.pdf'">GPU View-Adaptive Crack-Free Subdivision of Bézier Surfaces</button>
-      <button onclick="location.hash='tree.pdf'">Real-Time GPU Tree Generation</button>
-      <button onclick="location.hash='ecc.pdf'">EGO-VC - Evolutionary GPU-Optimization of Visual Correspondences for Image Alignment</button>
-      <button onclick="location.hash='imagemorph.pdf'">Multidimensional Image Morphing - Fast Image-Based Rendering of Open 3D and VR Environments</button>
-      <button onclick="location.hash='tpmc.pdf'">Towards Practical Meshlet Compression</button>
-      <button onclick="location.hash='generation.pdf'">Real-Time Procedural Generation with GPU Work Graphs</button>
-      <button onclick="location.hash='edgefriend.pdf'">Edge-Friend: Fast and Deterministic Catmull-Clark Subdivision Surfaces</button>
-      <button onclick="location.hash='vbacplus.pdf'">Permutation Coding for Vertex-Blend Attribute Compression</button>
-      <button onclick="location.hash='vbac.pdf'">Vertex-Blend Attribute Compression</button>
-      <button onclick="location.hash='breaking.pdf'">Breaking the Screen: Interaction Across Touchscreen Boundaries in Virtual Reality for Mobile Knowledge Workers</button>
-      <button onclick="location.hash='reconviguration.pdf'">ReconViguRation: Reconfiguring Physical Keyboards in Virtual Reality</button>
+      <button onclick="location.hash='beziersubdiv.pdf/paper'">GPU View-Adaptive Crack-Free Subdivision of Bézier Surfaces</button>
+      <button onclick="location.hash='gpuworkgraphs.pdf/paper'">GPU Work Graphs</button>
+      <button onclick="location.hash='tree.pdf/paper'">Real-Time GPU Tree Generation</button>
+      <button onclick="location.hash='ecc.pdf/paper'">EGO-VC - Evolutionary GPU-Optimization of Visual Correspondences for Image Alignment</button>
+      <button onclick="location.hash='imagemorph.pdf/paper'">Multidimensional Image Morphing - Fast Image-Based Rendering of Open 3D and VR Environments</button>
+      <button onclick="location.hash='tpmc.pdf/paper'">Towards Practical Meshlet Compression</button>
+      <button onclick="location.hash='generation.pdf/paper'">Real-Time Procedural Generation with GPU Work Graphs</button>
+      <button onclick="location.hash='edgefriend.pdf/paper'">Edge-Friend: Fast and Deterministic Catmull-Clark Subdivision Surfaces</button>
+      <button onclick="location.hash='vbacplus.pdf/paper'">Permutation Coding for Vertex-Blend Attribute Compression</button>
+      <button onclick="location.hash='vbac.pdf/paper'">Vertex-Blend Attribute Compression</button>
+      <button onclick="location.hash='breaking.pdf/paper'">Breaking the Screen: Interaction Across Touchscreen Boundaries in Virtual Reality for Mobile Knowledge Workers</button>
+      <button onclick="location.hash='reconviguration.pdf/paper'">ReconViguRation: Reconfiguring Physical Keyboards in Virtual Reality</button>
     </div>
-    <div id="viewer"></div>
+    <div id="viewer-col">
+      <div id="viewer"></div>
+      <div id="paperbar"></div>
+    </div>
   </div>
+  <script>
+  const papers = {
+    "beziersubdiv.pdf": {
+      demo: "https://www.youtube.com/embed/YSKj9LhdVa0",
+      code: {
+        url:  "https://raw.githubusercontent.com/CoburgGraphicsLab/AdaptiveBezierSubdivision/main/shader/WorkGraph.hlsl",
+        lang: "hlsl",
+        repo: "https://github.com/CoburgGraphicsLab/AdaptiveBezierSubdivision",
+      },
+      cite: `@inproceedings{kuth2026beziersubdiv,
+  author    = {Kuth, Bastian and Tabaei, Seyedmasih and Oberberger, Max and Meyer, Quirin},
+  title     = {{GPU} View-Adaptive Crack-Free Subdivision of {B\\'{e}zier} Surfaces},
+  booktitle = {Eurographics Symposium on Rendering},
+  year      = {2026},
+  publisher = {The Eurographics Association},
+}`
+    },
+    "gpuworkgraphs.pdf": {
+      slides: "publications/gpuworkgraphs-slides.pdf",
+      presentation: "https://www.youtube.com/embed/0GW7y2xNeTc",
+      code: {
+        url:  "https://raw.githubusercontent.com/GPUOpen-LibrariesAndSDKs/WorkGraphPlayground/main/tutorials/tutorial-0/HelloWorkGraphs.hlsl",
+        lang: "hlsl",
+        repo: "https://github.com/GPUOpen-LibrariesAndSDKs/WorkGraphPlayground",
+      },
+      extras: [
+        { id: 'cheatsheet1', label: 'Cheat Sheet 1', url: 'publications/gpuworkgraphs-cheatsheet1.pdf' },
+        { id: 'cheatsheet2', label: 'Cheat Sheet 2', url: 'publications/gpuworkgraphs-cheatsheet2.pdf' },
+      ],
+      cite: `@inproceedings{kuth2025gpuworkgraphs,
+  author    = {Kuth, Bastian and Oberberger, Max and Meyer, Quirin},
+  title     = {{GPU} Work Graphs},
+  booktitle = {SIGGRAPH Conference Courses},
+  year      = {2025},
+  pages     = {1--4},
+  doi       = {10.1145/3721241.3734003},
+}`
+    },
+    "tree.pdf": {
+      slides: "publications/tree-slides.pdf",
+      presentation: "https://www.youtube.com/embed/n3rcbBdy-BA",
+      demo: "https://www.youtube.com/embed/DZlJ4bHx1OQ",
+      code: {
+        url:  "https://raw.githubusercontent.com/Bloodwyn/gptree/main/procedural-tree-generation/TreeGeneration.h",
+        lang: "cpp",
+        repo: "https://github.com/Bloodwyn/gptree",
+      },
+      cite: `@inproceedings{kuth2025tree,
+  author    = {Kuth, Bastian and Oberberger, Max and Faber, Carsten and Pfeifer, Pirmin and Tabaei, Seyedmasih and Baumeister, Dominik and Meyer, Quirin},
+  title     = {Real-Time {GPU} Tree Generation},
+  booktitle = {High-Performance Graphics},
+  year      = {2025},
+  publisher = {The Eurographics Association},
+  doi       = {10.2312/hpg.20251168},
+}`
+    },
+    "ecc.pdf": {
+      cite: `@article{chang2025egovc,
+  author  = {Chang, Thomas and Hartmann, Kay and Kuth, Bastian and Seibt, Simon and von Rymon Lipinski, Bartosz},
+  title   = {{EGO-VC} -- Evolutionary {GPU}-Optimization of Visual Correspondences for Image Alignment},
+  journal = {Computer Science Research Notes},
+  year    = {2025},
+  volume  = {3501},
+  number  = {1},
+  pages   = {75--82},
+  doi     = {10.24132/CSRN.2025-8},
+}`
+    },
+    "imagemorph.pdf": {
+      demo: "https://www.youtube.com/embed/-CIo6EfSDUc",
+      cite: `@article{seibt2025imagemorph,
+  author  = {Seibt, Simon and Kuth, Bastian and von Rymon Lipinski, Bartosz and Chang, Thomas and Latoschik, Marc Erich},
+  title   = {Multidimensional Image Morphing -- Fast Image-Based Rendering of Open {3D} and {VR} Environments},
+  journal = {Virtual Reality \\& Intelligent Hardware},
+  year    = {2025},
+  volume  = {7},
+  number  = {2},
+  pages   = {155--172},
+  doi     = {10.1016/j.vrih.2023.06.007},
+}`
+    },
+    "tpmc.pdf": {
+      slides: "publications/tpmc-slides.pdf",
+      code: {
+        url:  "https://raw.githubusercontent.com/Bloodwyn/compressed-meshlet-paper/main/src/hlsl/GTS-Reuse.hlsl",
+        lang: "hlsl",
+        repo: "https://github.com/Bloodwyn/compressed-meshlet-paper",
+      },
+      cite: `@inproceedings{kuth2024tpmc,
+  author    = {Kuth, Bastian and Oberberger, Max and Kawala, Felix and Reitter, Sander and Michel, Sebastian and Chajdas, Matth\\"{a}us and Meyer, Quirin},
+  title     = {Towards Practical Meshlet Compression},
+  booktitle = {Vision, Modeling, and Visualization},
+  year      = {2024},
+  publisher = {The Eurographics Association},
+  doi       = {10.2312/vmv.20241204},
+}`
+    },
+    "generation.pdf": {
+      slides: "publications/generation-slides.pdf",
+      presentation: "https://www.youtube.com/embed/653fSmEalbo",
+      demo: "https://www.youtube.com/embed/yQtULUqQ9DI",
+      code: {
+        url:  "https://raw.githubusercontent.com/GPUOpen-LibrariesAndSDKs/WorkGraphsIvyGenerationSample/main/ivySample/shaders/ivy.hlsl",
+        lang: "hlsl",
+        repo: "https://github.com/GPUOpen-LibrariesAndSDKs/WorkGraphsIvyGenerationSample",
+      },
+      cite: `@article{kuth2024generation,
+  author  = {Kuth, Bastian and Oberberger, Max and Faber, Carsten and Baumeister, Dominik and Chajdas, Matth\\"{a}us and Meyer, Quirin},
+  title   = {Real-Time Procedural Generation with {GPU} Work Graphs},
+  journal = {Proceedings of the ACM on Computer Graphics and Interactive Techniques},
+  year    = {2024},
+  volume  = {7},
+  number  = {3},
+  pages   = {1--16},
+  doi     = {10.1145/3675376},
+}`
+    },
+    "edgefriend.pdf": {
+      slides: "publications/edgefriend-slides.pdf",
+      presentation: "https://www.youtube.com/embed/SkwoyRYa53U",
+      demo: "https://www.youtube.com/embed/5u-AwsFDdIg",
+      code: {
+        url:  "https://raw.githubusercontent.com/Bloodwyn/edgefriend-supplemental/master/hlsl/edgefriend.hlsl",
+        lang: "hlsl",
+        repo: "https://github.com/Bloodwyn/edgefriend-supplemental",
+      },
+      cite: `@article{kuth2023edgefriend,
+  author  = {Kuth, Bastian and Oberberger, Max and Chajdas, Matth\\"{a}us and Meyer, Quirin},
+  title   = {Edge-Friend: Fast and Deterministic {Catmull-Clark} Subdivision Surfaces},
+  journal = {Computer Graphics Forum},
+  year    = {2023},
+  volume  = {42},
+  number  = {8},
+  pages   = {e14863},
+  doi     = {10.1111/cgf.14863},
+}`
+    },
+    "vbacplus.pdf": {
+      presentation: "https://www.momentsingraphics.de/Media/I3D2022/peters2022_permutation_coding_video.mp4",
+      code: {
+        url:  "https://raw.githubusercontent.com/MomentsInGraphics/vulkan_renderer/blend_attributes/src/shaders/blend_attribute_compression.glsl",
+        lang: "glsl",
+        repo: "https://github.com/MomentsInGraphics/vulkan_renderer",
+      },
+      cite: `@article{peters2022vbacplus,
+  author  = {Peters, Christoph and Kuth, Bastian and Meyer, Quirin},
+  title   = {Permutation Coding for Vertex-Blend Attribute Compression},
+  journal = {Proceedings of the ACM on Computer Graphics and Interactive Techniques},
+  year    = {2022},
+  volume  = {5},
+  number  = {1},
+  doi     = {10.1145/3522607},
+}`
+    },
+    "vbac.pdf": {
+      presentation: "https://www.youtube.com/embed/L8IfdFokzDA?start=3925",
+      demo: "https://www.youtube.com/embed/CqiYm94Wz08",
+      code: {
+        url:  "https://raw.githubusercontent.com/Bloodwyn/Vertex-Blend-Attribute-Compression/master/src/32OSS_ITS.fnc.glsl",
+        lang: "glsl",
+        repo: "https://github.com/Bloodwyn/Vertex-Blend-Attribute-Compression",
+      },
+      cite: `@inproceedings{kuth2021vbac,
+  author    = {Kuth, Bastian and Meyer, Quirin},
+  title     = {Vertex-Blend Attribute Compression},
+  booktitle = {High-Performance Graphics},
+  year      = {2021},
+  publisher = {The Eurographics Association},
+  doi       = {10.2312/hpg.20211282},
+}`
+    },
+    "breaking.pdf": {
+      demo: "https://www.youtube.com/embed/-8uP-mL9Q_g",
+      cite: `@article{biener2020breaking,
+  author  = {Biener, Verena and Schneider, Daniel and Gesslein, Travis and Otte, Alexander and Kuth, Bastian and Kristensson, Per Ola and Ofek, Eyal and Pahud, Michel and Grubert, Jens},
+  title   = {Breaking the Screen: Interaction Across Touchscreen Boundaries in Virtual Reality for Mobile Knowledge Workers},
+  journal = {IEEE Transactions on Visualization and Computer Graphics},
+  year    = {2020},
+  volume  = {26},
+  number  = {12},
+  pages   = {3490--3502},
+  doi     = {10.1109/TVCG.2020.3023567},
+}`
+    },
+    "reconviguration.pdf": {
+      demo: "https://www.youtube.com/embed/zAcVrJqfI0Y",
+      cite: `@article{schneider2019reconviguration,
+  author  = {Schneider, Daniel and Otte, Alexander and Gesslein, Travis and Gagel, Philipp and Kuth, Bastian and Damlakhi, Mohamad Shahm and Dietz, Oliver and Ofek, Eyal and Pahud, Michel and Kristensson, Per Ola and M\\"{u}ller, J\\"{o}rg and Grubert, Jens},
+  title   = {{ReconViguRation}: Reconfiguring Physical Keyboards in Virtual Reality},
+  journal = {IEEE Transactions on Visualization and Computer Graphics},
+  year    = {2019},
+  volume  = {25},
+  number  = {11},
+  pages   = {3190--3201},
+  doi     = {10.1109/TVCG.2019.2932239},
+}`
+    }
+  };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/glsl.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/hlsl.min.js"></script>
   <script src="viewer.js"></script>
 </body>
 </html>
