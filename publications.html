@@ -9,25 +9,25 @@
 </head>
 <body>
   <div id="topbar">
-    <a class="tab" href="index.html">CV</a>
-    <a class="tab" href="publications.html">Publications</a>
-    <a class="tab" href="theses.html">Theses</a>
-    <a class="tab" href="awards.html">Awards</a>
+    <a class="tab" href="/">CV</a>
+    <a class="tab" href="/publications.html">Publications</a>
+    <a class="tab" href="/theses.html">Theses</a>
+    <a class="tab" href="/awards.html">Awards</a>
   </div>
   <div id="container">
     <div class="sidebar">
-      <button onclick="location.hash='beziersubdiv.pdf/paper'">GPU View-Adaptive Crack-Free Subdivision of Bézier Surfaces</button>
-      <button onclick="location.hash='gpuworkgraphs.pdf/paper'">GPU Work Graphs</button>
-      <button onclick="location.hash='tree.pdf/paper'">Real-Time GPU Tree Generation</button>
-      <button onclick="location.hash='ecc.pdf/paper'">EGO-VC - Evolutionary GPU-Optimization of Visual Correspondences for Image Alignment</button>
-      <button onclick="location.hash='imagemorph.pdf/paper'">Multidimensional Image Morphing - Fast Image-Based Rendering of Open 3D and VR Environments</button>
-      <button onclick="location.hash='tpmc.pdf/paper'">Towards Practical Meshlet Compression</button>
-      <button onclick="location.hash='generation.pdf/paper'">Real-Time Procedural Generation with GPU Work Graphs</button>
-      <button onclick="location.hash='edgefriend.pdf/paper'">Edge-Friend: Fast and Deterministic Catmull-Clark Subdivision Surfaces</button>
-      <button onclick="location.hash='vbacplus.pdf/paper'">Permutation Coding for Vertex-Blend Attribute Compression</button>
-      <button onclick="location.hash='vbac.pdf/paper'">Vertex-Blend Attribute Compression</button>
-      <button onclick="location.hash='breaking.pdf/paper'">Breaking the Screen: Interaction Across Touchscreen Boundaries in Virtual Reality for Mobile Knowledge Workers</button>
-      <button onclick="location.hash='reconviguration.pdf/paper'">ReconViguRation: Reconfiguring Physical Keyboards in Virtual Reality</button>
+      <button onclick="location.hash='beziersubdiv/paper'">GPU View-Adaptive Crack-Free Subdivision of Bézier Surfaces</button>
+      <button onclick="location.hash='gpuworkgraphs/paper'">GPU Work Graphs</button>
+      <button onclick="location.hash='tree/paper'">Real-Time GPU Tree Generation</button>
+      <button onclick="location.hash='ecc/paper'">EGO-VC - Evolutionary GPU-Optimization of Visual Correspondences for Image Alignment</button>
+      <button onclick="location.hash='imagemorph/paper'">Multidimensional Image Morphing - Fast Image-Based Rendering of Open 3D and VR Environments</button>
+      <button onclick="location.hash='tpmc/paper'">Towards Practical Meshlet Compression</button>
+      <button onclick="location.hash='generation/paper'">Real-Time Procedural Generation with GPU Work Graphs</button>
+      <button onclick="location.hash='edgefriend/paper'">Edge-Friend: Fast and Deterministic Catmull-Clark Subdivision Surfaces</button>
+      <button onclick="location.hash='vbacplus/paper'">Permutation Coding for Vertex-Blend Attribute Compression</button>
+      <button onclick="location.hash='vbac/paper'">Vertex-Blend Attribute Compression</button>
+      <button onclick="location.hash='breaking/paper'">Breaking the Screen: Interaction Across Touchscreen Boundaries in Virtual Reality for Mobile Knowledge Workers</button>
+      <button onclick="location.hash='reconviguration/paper'">ReconViguRation: Reconfiguring Physical Keyboards in Virtual Reality</button>
     </div>
     <div id="viewer-col">
       <div id="viewer"></div>
@@ -36,7 +36,7 @@
   </div>
   <script>
   const papers = {
-    "beziersubdiv.pdf": {
+    "beziersubdiv": {
       demo: "https://www.youtube.com/embed/YSKj9LhdVa0",
       code: {
         url:  "https://raw.githubusercontent.com/CoburgGraphicsLab/AdaptiveBezierSubdivision/main/shader/WorkGraph.hlsl",
@@ -51,7 +51,7 @@
   publisher = {The Eurographics Association},
 }`
     },
-    "gpuworkgraphs.pdf": {
+    "gpuworkgraphs": {
       slides: "publications/gpuworkgraphs-slides.pdf",
       presentation: "https://www.youtube.com/embed/0GW7y2xNeTc",
       code: {
@@ -72,7 +72,7 @@
   doi       = {10.1145/3721241.3734003},
 }`
     },
-    "tree.pdf": {
+    "tree": {
       slides: "publications/tree-slides.pdf",
       presentation: "https://www.youtube.com/embed/n3rcbBdy-BA",
       demo: "https://www.youtube.com/embed/DZlJ4bHx1OQ",
@@ -90,7 +90,7 @@
   doi       = {10.2312/hpg.20251168},
 }`
     },
-    "ecc.pdf": {
+    "ecc": {
       cite: `@article{chang2025egovc,
   author  = {Chang, Thomas and Hartmann, Kay and Kuth, Bastian and Seibt, Simon and von Rymon Lipinski, Bartosz},
   title   = {{EGO-VC} -- Evolutionary {GPU}-Optimization of Visual Correspondences for Image Alignment},
@@ -102,7 +102,7 @@
   doi     = {10.24132/CSRN.2025-8},
 }`
     },
-    "imagemorph.pdf": {
+    "imagemorph": {
       demo: "https://www.youtube.com/embed/-CIo6EfSDUc",
       cite: `@article{seibt2025imagemorph,
   author  = {Seibt, Simon and Kuth, Bastian and von Rymon Lipinski, Bartosz and Chang, Thomas and Latoschik, Marc Erich},
@@ -115,7 +115,7 @@
   doi     = {10.1016/j.vrih.2023.06.007},
 }`
     },
-    "tpmc.pdf": {
+    "tpmc": {
       slides: "publications/tpmc-slides.pdf",
       code: {
         url:  "https://raw.githubusercontent.com/Bloodwyn/compressed-meshlet-paper/main/src/hlsl/GTS-Reuse.hlsl",
@@ -131,7 +131,7 @@
   doi       = {10.2312/vmv.20241204},
 }`
     },
-    "generation.pdf": {
+    "generation": {
       slides: "publications/generation-slides.pdf",
       presentation: "https://www.youtube.com/embed/653fSmEalbo",
       demo: "https://www.youtube.com/embed/yQtULUqQ9DI",
@@ -151,7 +151,7 @@
   doi     = {10.1145/3675376},
 }`
     },
-    "edgefriend.pdf": {
+    "edgefriend": {
       slides: "publications/edgefriend-slides.pdf",
       presentation: "https://www.youtube.com/embed/SkwoyRYa53U",
       demo: "https://www.youtube.com/embed/5u-AwsFDdIg",
@@ -171,7 +171,7 @@
   doi     = {10.1111/cgf.14863},
 }`
     },
-    "vbacplus.pdf": {
+    "vbacplus": {
       presentation: "https://www.momentsingraphics.de/Media/I3D2022/peters2022_permutation_coding_video.mp4",
       code: {
         url:  "https://raw.githubusercontent.com/MomentsInGraphics/vulkan_renderer/blend_attributes/src/shaders/blend_attribute_compression.glsl",
@@ -188,7 +188,7 @@
   doi     = {10.1145/3522607},
 }`
     },
-    "vbac.pdf": {
+    "vbac": {
       presentation: "https://www.youtube.com/embed/L8IfdFokzDA?start=3925",
       demo: "https://www.youtube.com/embed/CqiYm94Wz08",
       code: {
@@ -205,7 +205,7 @@
   doi       = {10.2312/hpg.20211282},
 }`
     },
-    "breaking.pdf": {
+    "breaking": {
       demo: "https://www.youtube.com/embed/-8uP-mL9Q_g",
       cite: `@article{biener2020breaking,
   author  = {Biener, Verena and Schneider, Daniel and Gesslein, Travis and Otte, Alexander and Kuth, Bastian and Kristensson, Per Ola and Ofek, Eyal and Pahud, Michel and Grubert, Jens},
@@ -218,7 +218,7 @@
   doi     = {10.1109/TVCG.2020.3023567},
 }`
     },
-    "reconviguration.pdf": {
+    "reconviguration": {
       demo: "https://www.youtube.com/embed/zAcVrJqfI0Y",
       cite: `@article{schneider2019reconviguration,
   author  = {Schneider, Daniel and Otte, Alexander and Gesslein, Travis and Gagel, Philipp and Kuth, Bastian and Damlakhi, Mohamad Shahm and Dietz, Oliver and Ofek, Eyal and Pahud, Michel and Kristensson, Per Ola and M\\"{u}ller, J\\"{o}rg and Grubert, Jens},

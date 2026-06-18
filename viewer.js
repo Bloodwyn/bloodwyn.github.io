@@ -44,7 +44,11 @@ function renderPaperBar(slug, activeTab) {
 }
 
 function loadPDF(path) {
-    viewer.innerHTML = `<embed src="${e(path)}" type="application/pdf">`;
+    if (/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(path)) {
+        viewer.innerHTML = `<img src="${e(path)}" alt="">`;
+    } else {
+        viewer.innerHTML = `<embed src="${e(path)}" type="application/pdf">`;
+    }
 }
 
 function loadVideo(url) {
@@ -116,7 +120,7 @@ function loadCite(bibtex) {
 
 function loadTab(slug, tab) {
     const meta = (typeof papers !== 'undefined') ? papers[slug] : null;
-    const pdfPath = `${PAGE_FOLDER}/${slug}`;
+    const pdfPath = slug.includes('.') ? `${PAGE_FOLDER}/${slug}` : `${PAGE_FOLDER}/${slug}.pdf`;
 
     if (tab === 'paper') { loadPDF(pdfPath); return; }
     if (!meta) { loadPDF(pdfPath); return; }
