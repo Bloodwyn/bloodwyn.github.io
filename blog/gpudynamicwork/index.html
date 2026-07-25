@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Features for Dynamic GPU Work Creation | Bastian Kuth</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    /* ── column header bar (flex row, pans only horizontally) ── */
+    #col-header-bar {
+      flex: 0 0 auto;
+      height: 36px;
+      overflow: hidden;
+      pointer-events: none;
+      background: #333;
+      position: relative;
+    }
+    #col-header-inner {
+      position: absolute;
+      top: 0; left: 0;
+      display: flex;
+      height: 100%;
+    }
+    .col-header-cell {
+      flex: 0 0 auto;
+      display: flex; align-items: center; justify-content: center;
+      background: #333; color: #fff;
+      font-size: .85rem; font-weight: 700;
+      letter-spacing: .04em;
+      border-right: 1px solid #555;
+      white-space: nowrap;
+      padding: 0 6px;
+    }
+
+    /* ── map column (header bar + map shell stacked) ── */
+    #map-col {
+      flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0;
+    }
+
+    /* ── map shell ── */
+    #map-shell {
+      flex: 1;
+      overflow: hidden;
+      cursor: grab;
+      user-select: none;
+      background: #efefef;
+      position: relative;
+    }
+    #map-shell.dragging { cursor: grabbing; }
+
+    /* ── column stripe underlay ── */
+    #col-stripes {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      display: flex;
+      pointer-events: none;
+    }
+    .col-stripe {
+      flex: 0 0 auto;
+      position: relative;
+    }
+
+    /* ── grid canvas ── */
+    #canvas {
+      display: grid;
+      position: absolute;
+      top: 0; left: 0;
+      align-items: start;
+    }
+
+    /* ── row cells ── */
+    .row-cell {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    /* ── cards ── */
+    .card {
+      border-radius: 6px;
+      padding: 11px 13px;
+      box-shadow: 0 1px 5px rgba(0,0,0,.13);
+      cursor: pointer;
+      transition: box-shadow .15s, transform .1s;
+      border-left: 5px solid transparent;
+      box-sizing: border-box;
+    }
+    .card:hover {
+      box-shadow: 0 4px 18px rgba(0,0,0,.22);
+      transform: translateY(-2px);
+    }
+    .card-name, .card-tag {
+      font-size: .78rem; font-weight: 700;
+      line-height: 1.35; color: #111;
+    }
+    .card-tag { color: #666; }
+    .card-diff {
+      font-size: .73rem; color: #333; line-height: 1.38;
+      margin-top: 5px;
+    }
+
+
+
+    /* ── row label sidebar ── */
+    #row-label-col {
+      flex: 0 0 auto;
+      width: 110px;
+      display: flex;
+      flex-direction: column;
+      background: #3a3a3a;
+      overflow: hidden;
+      position: relative;
+      border-right: 1px solid #555;
+    }
+    #row-label-header {
+      flex: 0 0 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #333;
+      color: #999;
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .05em;
+      white-space: nowrap;
+      border-bottom: 1px solid #555;
+    }
+    #row-label-inner {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    #row-label-canvas {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+    }
+    .row-label-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 8px;
+      color: #aaa;
+      font-size: .68rem;
+      font-weight: 500;
+      letter-spacing: .03em;
+      text-align: center;
+      line-height: 1.35;
+      border-bottom: 1px solid #484848;
+      box-sizing: border-box;
+    }
+
+    #drag-hint {
+      position: fixed; bottom: 14px; left: 50%;
+      transform: translateX(-50%);
+      font-size: .75rem; color: #bbb;
+      pointer-events: none; z-index: 50;
+      transition: opacity 1s;
+    }
+    #drag-hint.hidden { opacity: 0; }
+  </style>
+</head>
+<body>
+
+<div id="topbar">
+  <a class="tab" href="/publications.html">Publications</a>
+  <a class="tab" href="/">CV</a>
+  <a class="tab" href="/theses.html">Theses</a>
+  <a class="tab" href="/awards.html">Awards</a>
+  <a class="tab" href="/blog.html">Blog</a>
+</div>
+
+<div id="container">
+  <div class="sidebar">
+    <button onclick="location.href='/blog/gpudynamicwork/'">Features for Dynamic GPU Work Creation</button>
+  </div>
+  <div id="row-label-col">
+    <div id="row-label-header">GPU Autonomy ↓</div>
+    <div id="row-label-inner">
+      <div id="row-label-canvas"></div>
+    </div>
+  </div>
+  <div id="map-col">
+    <div id="col-header-bar">
+      <div id="col-header-inner"></div>
+    </div>
+    <div id="map-shell">
+      <div id="col-stripes"></div>
+      <div id="canvas"></div>
+    </div>
+  </div>
+</div>
+
+<div id="drag-hint">drag to pan</div>
+
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA
+// Each card has:
+//   col    — API column id
+//   cat    — colour group id (used for border + legend)
+//   yBand  — 0 (least GPU autonomy) … 5 (most)
+//   name, tag, desc, pros[], cons[]
+// ─────────────────────────────────────────────────────────────────────────────
+
+const COLS = [
+  // open / cross-vendor
+  { id: 'webgpu',    label: 'WebGPU'               },
+  { id: 'opengl',    label: 'OpenGL'               },
+  { id: 'vulkan',    label: 'Vulkan'               },
+  // Microsoft
+  { id: 'directx',   label: 'DirectX (Microsoft)'  },
+  // Apple
+  { id: 'metal',     label: 'Metal (Apple)'        },
+  // open / cross-vendor compute
+  { id: 'opencl',    label: 'OpenCL'               },
+  // NVIDIA
+  { id: 'cuda',      label: 'CUDA (NVIDIA)'        },
+  // Intel
+  { id: 'levelzero', label: 'Level Zero (Intel)'   },
+  // AMD
+  { id: 'pal',       label: 'PAL (AMD)'            },
+  { id: 'hip',       label: 'HIP (AMD)'            },
+];
+
+// Each cat gets its own distinct colour — chosen so that only truly
+// equivalent mechanisms share a colour across columns.
+const CATS = {
+  'indirect-single':          { color: '#6fa3d0', bg: '#eef5fb', label: 'Single Indirect Dispatch' },
+  'indirect-multi-static':    { color: '#4a8faa', bg: '#e8f4f8', label: 'Multi Indirect' },
+  'indirect-multi-dynamic':   { color: '#2d6e88', bg: '#ddeef5', label: 'Dynamic Multi Indirect' },
+  'indirect-binding':         { color: '#5a60b8', bg: '#eaeafb', label: 'Dynamic Multi Indirect with Bindings' },
+  'indirect-command-buffer':  { color: '#6a5aaa', bg: '#ebe8f8', label: 'Indirect Command Buffer' },
+  'device-generated-commands':{ color: '#c07830', bg: '#fdf2e2', label: 'Device Generated Commands' },
+  'mesh-shaders':             { color: '#c07820', bg: '#fdf0d8', label: 'Mesh Shaders' },
+  'cuda-graphs':              { color: '#3a7a8a', bg: '#e0f0f4', label: 'CUDA Graphs Conditional Nodes' },
+  'dynamic-parallelism':      { color: '#3a6e3a', bg: '#e5f3e5', label: 'Dynamic Parallelism' },
+  'work-graphs':              { color: '#b03030', bg: '#fce8e8', label: 'Work Graphs / Execution Graphs' },
+  'placeholder':              { color: 'transparent', bg: 'transparent', label: '' },
+};
+
+// yBand: 0 = top/least autonomy, 6 = bottom/most autonomy
+const cards = [
+
+  // ── WebGPU ───────────────────────────────────────────────────────────────
+  {
+    col: 'webgpu', cat: 'indirect-single', yBand: 1,
+    url: 'https://www.w3.org/TR/webgpu/#dom-gpucomputepassencoder-dispatchworkgroupsindirect',
+    name: 'draw[Indexed]Indirect<br>dispatchWorkgroupsIndirect',
+    version: 'WebGPU Core (W3C)',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">one</span> dispatch for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>.`,
+  },
+
+  // ── yBand 1: single-call indirect ────────────────────────────────────────
+  {
+    col: 'opengl', cat: 'indirect-single', yBand: 1,
+    url: 'https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDrawArraysIndirect.xhtml',
+    name: 'glDraw*Indirect',
+    version: 'OpenGL Core 4.0',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">one</span> dispatch for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>.`,
+  },
+  {
+    col: 'opengl', cat: 'indirect-single', yBand: 1,
+    url: 'https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDispatchComputeIndirect.xhtml',
+    name: 'glDispatchComputeIndirect',
+    version: 'OpenGL Core 4.3',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">one</span> dispatch for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>.`,
+  },
+  {
+    col: 'directx', cat: 'indirect-single', yBand: 1,
+    url: 'https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11devicecontext-drawinstancedindirect',
+    name: 'Draw[Indexed]InstancedIndirect',
+    version: 'D3D11.0',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">one</span> dispatch for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>.`,
+  },
+  {
+    col: 'vulkan', cat: 'indirect-single', yBand: 1,
+    url: 'https://registry.khronos.org/vulkan/specs/latest/man/html/vkCmdDispatchIndirect.html',
+    name: 'vkCmdDispatchIndirect',
+    version: 'Vulkan Core 1.0',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">one</span> dispatch for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>.`,
+  },
+  {
+    col: 'metal', cat: 'indirect-single', yBand: 1,
+    url: 'https://developer.apple.com/documentation/metal/indirect-command-encoding',
+    name: 'MTLDraw*Indirect<br>MTLDispatchThreadgroupsIndirect',
+    version: 'Metal (iOS 9 / macOS 10.11)',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">one</span> dispatch for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>.`,
+  },
+
+  // ── yBand 2: multi-draw (CPU count) + static graphs ──────────────────────
+  {
+    col: 'opengl', cat: 'indirect-multi-static', yBand: 2,
+    url: 'https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMultiDrawArraysIndirect.xhtml',
+    name: 'glMultiDraw*Indirect',
+    version: 'OpenGL Core 4.3',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">N</span> dispatches for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>. Count N is <span style="font-weight:600">static</span>.`,
+  },
+  {
+    col: 'vulkan', cat: 'indirect-multi-static', yBand: 2,
+    url: 'https://registry.khronos.org/vulkan/specs/latest/man/html/vkCmdDrawIndirect.html',
+    name: 'vkCmdDraw[Indexed]Indirect',
+    version: 'Vulkan Core 1.0',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">N</span> dispatches for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>. Count N is <span style="font-weight:600">static</span>.`,
+  },
+
+  // ── yBand 3: GPU-controlled count ────────────────────────────────────────
+  {
+    col: 'opengl', cat: 'indirect-multi-dynamic', yBand: 3,
+    url: 'https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMultiDrawElementsIndirectCount.xhtml',
+    name: 'glMultiDraw*IndirectCount',
+    version: 'OpenGL 4.6',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">N</span> dispatches for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>. Count N is <span style="font-weight:600">dynamic</span>.`,
+  },
+  {
+    col: 'directx', cat: 'indirect-binding', yBand: 4,
+    url: 'https://learn.microsoft.com/en-us/windows/win32/api/d3d12/nf-d3d12-id3d12graphicscommandlist-executeindirect',
+    name: 'ExecuteIndirect',
+    version: 'D3D12 Core',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">N</span> dispatches for the <span style="font-weight:600">current</span> pipeline using size, constants, and binding arguments from a <span style="font-weight:600">GPU buffer</span>. Count N is <span style="font-weight:600">dynamic</span>.`,
+  },
+  {
+    col: 'vulkan', cat: 'indirect-multi-dynamic', yBand: 3,
+    url: 'https://registry.khronos.org/vulkan/specs/latest/man/html/vkCmdDrawIndirectCount.html',
+    name: 'vkCmdDraw[Indexed]IndirectCount',
+    version: 'Vulkan 1.2 (optional feature)',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">N</span> dispatches for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>. Count N is <span style="font-weight:600">dynamic</span>.`,
+  },
+  {
+    col: 'metal', cat: 'indirect-command-buffer', yBand: 4,
+    url: 'https://developer.apple.com/documentation/metal/mtlindirectcommandbuffer',
+    name: 'MTLIndirectCommandBuffer',
+    version: 'Metal 2 (iOS 12+) / Arg Buffer Tier 2 (A13+)',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">N</span> dispatches for the <span style="font-weight:600">current</span> pipeline using size, constants, and binding arguments from a <span style="font-weight:600">GPU buffer</span>. Count N is <span style="font-weight:600">dynamic</span>.`,
+  },
+
+  // ── yBand 5: GPU generates full command streams (including PSO switches) ──
+  {
+    col: 'vulkan', cat: 'device-generated-commands', yBand: 6,
+    url: 'https://registry.khronos.org/vulkan/specs/latest/man/html/VK_EXT_device_generated_commands.html',
+    name: 'vkCmdExecuteGeneratedCommandsEXT',
+    version: 'VK_EXT_device_generated_commands',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">N</span> dispatches of a <span style="font-weight:600">set of pipelines</span> using size, constants, binding, and PSO arguments from a <span style="font-weight:600">GPU buffer</span>. Count N is <span style="font-weight:600">dynamic</span>.`,
+  },
+
+  // ── yBand 4: geometry amplification ──────────────────────────────────────
+  {
+    col: 'opengl', cat: 'mesh-shaders', yBand: 5,
+    url: 'https://registry.khronos.org/OpenGL/extensions/EXT/EXT_mesh_shader.txt',
+    name: 'gl[Multi]DrawMeshTasks*EXT',
+    version: 'GL_EXT_mesh_shader',
+    info: `One GPU task/amplification thread group emits <span style="font-weight:600">one</span> <span style="font-weight:600">dynamic</span> dispatch grid of <span style="font-weight:600">mesh thread groups</span> together with a <span style="font-weight:600">small payload</span>.`,
+  },
+  {
+    col: 'directx', cat: 'mesh-shaders', yBand: 5,
+    url: 'https://microsoft.github.io/DirectX-Specs/d3d/MeshShader.html',
+    name: 'DispatchMesh',
+    version: 'D3D12 Mesh Shader Tier 1 / SM 6.5',
+    info: `One GPU task/amplification thread group emits <span style="font-weight:600">one</span> <span style="font-weight:600">dynamic</span> dispatch grid of <span style="font-weight:600">mesh thread groups</span> together with a <span style="font-weight:600">small payload</span>.`,
+  },
+  {
+    col: 'vulkan', cat: 'mesh-shaders', yBand: 5,
+    url: 'https://registry.khronos.org/vulkan/specs/latest/man/html/VK_EXT_mesh_shader.html',
+    name: 'vkCmdDrawMeshTasks*EXT',
+    version: 'VK_EXT_mesh_shader',
+    info: `One GPU task/amplification thread group emits <span style="font-weight:600">one</span> <span style="font-weight:600">dynamic</span> dispatch grid of <span style="font-weight:600">mesh thread groups</span> together with a <span style="font-weight:600">small payload</span>.`,
+  },
+  {
+    col: 'metal', cat: 'mesh-shaders', yBand: 5,
+    url: 'https://developer.apple.com/documentation/metal/mtlmeshrenderpipelinedescriptor',
+    name: 'drawMeshThreadgroups',
+    version: 'Metal 3',
+    info: `One GPU task/amplification thread group emits <span style="font-weight:600">one</span> <span style="font-weight:600">dynamic</span> dispatch grid of <span style="font-weight:600">mesh thread groups</span> together with a <span style="font-weight:600">small payload</span>.`,
+  },
+
+  // ── yBand 0: GPU-driven control flow only (no work-size control) ──────────
+  {
+    col: 'cuda', cat: 'cuda-graphs', yBand: 0,
+    url: 'https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/cuda-graphs.html#conditional-graph-nodes',
+    name: 'CUDA Graphs Conditional Nodes',
+    version: 'CUDA 12.4+',
+    info: `A <span style="font-weight:600">CUDA Graph</span> is a <span style="font-weight:600">static</span> DAG of shaders where each node executes after <span style="font-weight:600">all its parents</span> complete. All dispatch sizes are <span style="font-weight:600">static</span>. <span style="font-weight:600">Conditional nodes</span> allow a shader to drive <span style="font-weight:600">IF, WHILE, or SWITCH</span> branching over sub-graphs from device code, with no CPU round-trip.`,
+  },
+
+  // ── yBand 6: device-side kernel launch, manual memory ────────────────────
+  {
+    col: 'cuda', cat: 'dynamic-parallelism', yBand: 8,
+    url: 'https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/dynamic-parallelism.html',
+    name: 'Dynamic Parallelism (CDP2)',
+    version: 'CUDA 12+ / Compute Capability 9.0+',
+    info: `A shader can directly <span style="font-weight:600">dispatch</span> other <span style="font-weight:600">shaders</span> with <span style="font-weight:600">dynamic</span> grid sizes and a <span style="font-weight:600">small payload</span>. Child dispatches can run <span style="font-weight:600">asynchronously</span>, be <span style="font-weight:600">enqueued</span> after the parent, or the parent can <span style="font-weight:600">wait</span> for them to finish.`,
+  },
+  {
+    col: 'opencl', cat: 'dynamic-parallelism', yBand: 8,
+    url: 'https://registry.khronos.org/OpenCL/sdk/2.0/docs/man/xhtml/enqueue_kernel.html',
+    name: 'enqueue_kernel',
+    version: 'OpenCL 2.0 (optional in 3.0)',
+    info: `A shader can directly <span style="font-weight:600">dispatch</span> other <span style="font-weight:600">shaders</span> with <span style="font-weight:600">dynamic</span> grid sizes via block capture. Child dispatches can run <span style="font-weight:600">asynchronously</span>, be <span style="font-weight:600">enqueued</span> after the parent, or the parent can <span style="font-weight:600">wait</span> for them to finish.`,
+  },
+
+  // ── Level Zero ───────────────────────────────────────────────────────────
+  {
+    col: 'levelzero', cat: 'indirect-single', yBand: 1,
+    url: 'https://oneapi-src.github.io/level-zero-spec/level-zero/latest/core/api.html#zecommandlistappendlaunchkernelindirect',
+    name: 'LaunchKernelIndirect',
+    version: 'Level Zero Core',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">one</span> dispatch for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>.`,
+  },
+  {
+    col: 'levelzero', cat: 'indirect-multi-dynamic', yBand: 3,
+    url: 'https://oneapi-src.github.io/level-zero-spec/level-zero/latest/core/api.html#zecommandlistappendlaunchmultiplekernelsindirect',
+    name: 'LaunchMultipleKernelsIndirect',
+    version: 'Level Zero Core',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">N</span> dispatches for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>. Count N is <span style="font-weight:600">dynamic</span>.`,
+  },
+
+  // ── yBand 7: work graphs ──────────────────────────────────────────────────
+  {
+    col: 'directx', cat: 'work-graphs', yBand: 7,
+    url: 'https://microsoft.github.io/DirectX-Specs/d3d/WorkGraphs.html',
+    name: 'DispatchGraph',
+    version: 'D3D12 Agility SDK 1.613+',
+    info: `A <span style="font-weight:600">Work Graph</span> is a <span style="font-weight:600">DAG</span> (max depth 32) of shaders where edges define which nodes can create work for others. Work can be parametrized with a <span style="font-weight:600">small payload</span> and created as <span style="font-weight:600">per thread</span>, <span style="font-weight:600">multiple threads in a group</span>, or as a whole <span style="font-weight:600">static or dynamic grid</span>. Launched <span style="font-weight:600">children</span> can <span style="font-weight:600">overlap</span> with parent execution.`,
+  },
+  {
+    col: 'directx', cat: 'work-graphs', yBand: 7,
+    url: 'https://microsoft.github.io/DirectX-Specs/d3d/WorkGraphs.html#mesh-nodes',
+    name: 'Mesh Nodes',
+    version: 'D3D12 Agility SDK 1.715-preview+',
+    info: `Extends Work Graphs with <span style="font-weight:600">mesh shader pipeline leaf nodes</span>, enabling fully GPU-driven <span style="font-weight:600">graphics PSO switches</span> from within a work graph without CPU involvement.`,
+  },
+  {
+    col: 'vulkan', cat: 'work-graphs', yBand: 7,
+    url: 'https://registry.khronos.org/vulkan/specs/latest/man/html/VK_AMDX_shader_enqueue.html',
+    name: 'vkCmdDispatchGraphAMDX',
+    version: 'VK_AMDX_shader_enqueue (provisional, AMD-only)',
+    info: `An <span style="font-weight:600">Execution Graph</span> is a <span style="font-weight:600">DAG</span> of shaders where edges define which nodes can create work for others. Work can be parametrized with a <span style="font-weight:600">small payload</span> and created as <span style="font-weight:600">per thread</span>, <span style="font-weight:600">multiple threads in a group</span>, or as a whole <span style="font-weight:600">static or dynamic grid</span>. Launched <span style="font-weight:600">children</span> can <span style="font-weight:600">overlap</span> with parent execution. <span style="font-weight:600">AMD-only, provisional</span>.`,
+  },
+
+  // ── HIP placeholder ──────────────────────────────────────────────────────
+  {
+    col: 'hip', cat: 'placeholder', yBand: 4,
+    url: 'https://rocm.docs.amd.com/projects/HIP/en/latest/',
+    name: '<span style="color:#aaa;font-style:italic;font-weight:normal;display:block;text-align:center">Page intentionally left blank.</span>',
+    version: '',
+    info: '',
+  },
+
+  // ── PAL (AMD) ────────────────────────────────────────────────────────────
+  {
+    col: 'pal', cat: 'indirect-single', yBand: 1,
+    url: 'https://github.com/GPUOpen-Drivers/pal/blob/dev/inc/core/palCmdBuffer.h',
+    name: 'CmdDraw[Indexed]Indirect<br>CmdDispatchIndirect',
+    version: 'PAL Core',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">one</span> dispatch for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>.`,
+  },
+  {
+    col: 'pal', cat: 'indirect-binding', yBand: 4,
+    url: 'https://github.com/GPUOpen-Drivers/pal/blob/dev/inc/core/palCmdBuffer.h',
+    name: 'CmdExecuteIndirectCmds',
+    version: 'PAL Core',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">N</span> dispatches for the <span style="font-weight:600">current</span> pipeline using size, constants, and binding arguments from a <span style="font-weight:600">GPU buffer</span>. Count N is <span style="font-weight:600">dynamic</span>.`,
+  },
+  {
+    col: 'pal', cat: 'mesh-shaders', yBand: 5,
+    url: 'https://github.com/GPUOpen-Drivers/pal/blob/dev/inc/core/palCmdBuffer.h',
+    name: 'CmdDispatchMesh[Indirect]',
+    version: 'PAL Core (GFX10.3+)',
+    info: `One GPU task/amplification thread group emits <span style="font-weight:600">one</span> <span style="font-weight:600">dynamic</span> dispatch grid of <span style="font-weight:600">mesh thread groups</span> together with a <span style="font-weight:600">small payload</span>.`,
+  },
+  {
+    col: 'pal', cat: 'work-graphs', yBand: 7,
+    url: 'https://github.com/GPUOpen-Drivers/pal',
+    name: 'Shader Enqueue',
+    version: 'PAL Core (GFX11+, internal)',
+    info: `An <span style="font-weight:600">Execution Graph</span> is a <span style="font-weight:600">DAG</span> of shaders where edges define which nodes can create work for others. Work can be parametrized with a <span style="font-weight:600">small payload</span> and created as <span style="font-weight:600">per thread</span>, <span style="font-weight:600">multiple threads in a group</span>, or as a whole <span style="font-weight:600">static or dynamic grid</span>. Launched <span style="font-weight:600">children</span> can <span style="font-weight:600">overlap</span> with parent execution. Internal substrate beneath VK_AMDX_shader_enqueue and D3D12 Work Graphs.`,
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LAYOUT
+// ─────────────────────────────────────────────────────────────────────────────
+const COL_W = 300;
+
+const BAND_LABELS = [
+  'GPU-Driven\nDispatch\nControl Flow',     // 0
+  'Single\nIndirect',             // 1
+  'Multi\nIndirect',              // 2
+  'Dynamic Multi\nIndirect',      // 3
+  'Dynamic Multi Indirect\nwith Bindings', // 4
+  'Mesh\nShaders',                // 5
+  'Device Generated\nCommands',   // 6
+  'Work\nGraphs',                 // 7
+  'Device-Side\nKernel Launch',   // 8
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BUILD DOM
+// ─────────────────────────────────────────────────────────────────────────────
+const shell          = document.getElementById('map-shell');
+const canvas         = document.getElementById('canvas');
+const colStripes     = document.getElementById('col-stripes');
+const colHeaderInner = document.getElementById('col-header-inner');
+const rowLabelCanvas = document.getElementById('row-label-canvas');
+
+const totalW  = COLS.length * COL_W;
+const maxBand = Math.max(...cards.map(c => c.yBand));
+const numRows = maxBand + 1;
+
+// Grid: one column per API, one row per yBand
+canvas.style.position = 'absolute';
+canvas.style.top = '0';
+canvas.style.left = '0';
+canvas.style.width = totalW + 'px';
+canvas.style.gridTemplateColumns = COLS.map(() => COL_W + 'px').join(' ');
+canvas.style.gridTemplateRows    = Array.from({length: numRows}, () => 'auto').join(' ');
+
+// Column header cells
+COLS.forEach(col => {
+  const cell = document.createElement('div');
+  cell.className = 'col-header-cell';
+  cell.style.width = COL_W + 'px';
+  cell.textContent = col.label;
+  colHeaderInner.appendChild(cell);
+});
+
+// Column stripe underlay (positioned absolutely, full canvas height after layout)
+colStripes.style.width = totalW + 'px';
+COLS.forEach((col, ci) => {
+  const stripe = document.createElement('div');
+  stripe.className = 'col-stripe';
+  stripe.style.width = COL_W + 'px';
+  stripe.style.borderRight = '1px solid #ddd';
+  stripe.style.background  = ci % 2 === 0 ? 'rgba(255,255,255,.6)' : 'rgba(232,232,232,.5)';
+  colStripes.appendChild(stripe);
+});
+
+// Bucket cards by grid cell
+const byCell = {};
+cards.forEach(c => {
+  const key = c.col + '|' + c.yBand;
+  if (!byCell[key]) byCell[key] = [];
+  byCell[key].push(c);
+});
+
+// Create one row-cell div per grid cell (even empty ones, to keep grid alignment)
+for (let row = 0; row < numRows; row++) {
+  COLS.forEach((col, ci) => {
+    const cell = document.createElement('div');
+    cell.className = 'row-cell';
+    cell.style.gridColumn = (ci + 1) + '';
+    cell.style.gridRow    = (row + 1) + '';
+
+    const key = col.id + '|' + row;
+    const cellCards = byCell[key] || [];
+    cellCards.forEach(c => {
+      const cat = CATS[c.cat];
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.style.borderLeftColor = cat.color;
+      div.style.background      = cat.bg;
+      div.innerHTML =
+        `<div class="card-name">${c.name}</div>` +
+        (c.version  ? `<div class="card-tag">${c.version}</div>`   : '') +
+        (c.info ? `<div class="card-diff">${c.info}</div>` : '');
+      div.addEventListener('click', () => { if (!moved) window.open(c.url, '_blank'); });
+      cell.appendChild(div);
+    });
+
+    canvas.appendChild(cell);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PANNING
+// ─────────────────────────────────────────────────────────────────────────────
+let panX = 0, panY = 0;
+let dragging = false, moved = false;
+let startX = 0, startY = 0, startPanX = 0, startPanY = 0;
+let totalH = 0;
+
+function clampPan() {
+  const shellW = shell.clientWidth;
+  const shellH = shell.clientHeight;
+  panX = Math.max(Math.min(0, shellW - totalW), Math.min(0, panX));
+  panY = Math.max(Math.min(0, shellH - totalH), Math.min(0, panY));
+}
+
+function applyPan() {
+  canvas.style.transform         = `translate(${panX}px,${panY}px)`;
+  colStripes.style.transform     = `translateX(${panX}px)`;
+  colHeaderInner.style.transform = `translateX(${panX}px)`;
+  rowLabelCanvas.style.transform = `translateY(${panY}px)`;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  // After layout, measure actual canvas height for clamp
+  totalH = canvas.scrollHeight;
+
+  // Build row label cells matching canvas row heights.
+  // Group all .row-cell elements by their gridRow value, then take the
+  // tallest measured height in each group (in a CSS grid every cell in the
+  // same row gets the same height, so any cell works, but taking the max is
+  // robust against sub-pixel rounding and any edge cases).
+  const rowHeights = {};
+  canvas.querySelectorAll('.row-cell').forEach(cell => {
+    const rowKey = cell.style.gridRow; // e.g. "3"
+    const h = cell.getBoundingClientRect().height;
+    rowHeights[rowKey] = Math.max(rowHeights[rowKey] || 0, h);
+  });
+
+  for (let row = 0; row < numRows; row++) {
+    const rowKey = String(row + 1);
+    const h = rowHeights[rowKey] || 0;
+    const label = document.createElement('div');
+    label.className = 'row-label-cell';
+    label.style.height = h + 'px';
+    label.innerHTML = (BAND_LABELS[row] || '').replace(/\n/g, '<br>');
+    rowLabelCanvas.appendChild(label);
+  }
+
+  const shellW = shell.clientWidth;
+  panX = totalW < shellW ? Math.round((shellW - totalW) / 2) : 0;
+  panY = 0;
+  clampPan();
+  applyPan();
+});
+
+// Mouse
+shell.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  dragging = true; moved = false;
+  startX = e.clientX; startY = e.clientY;
+  startPanX = panX; startPanY = panY;
+  shell.classList.add('dragging');
+});
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  const dx = e.clientX - startX, dy = e.clientY - startY;
+  if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
+  panX = startPanX + dx; panY = startPanY + dy;
+  clampPan(); applyPan();
+});
+window.addEventListener('mouseup', () => {
+  dragging = false;
+  shell.classList.remove('dragging');
+});
+
+// Touch
+let t0 = null;
+shell.addEventListener('touchstart', e => {
+  t0 = e.touches[0]; moved = false;
+  startPanX = panX; startPanY = panY;
+}, { passive: true });
+shell.addEventListener('touchmove', e => {
+  if (!t0) return;
+  const dx = e.touches[0].clientX - t0.clientX;
+  const dy = e.touches[0].clientY - t0.clientY;
+  if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
+  panX = startPanX + dx; panY = startPanY + dy;
+  clampPan(); applyPan();
+}, { passive: true });
+shell.addEventListener('touchend', () => { t0 = null; });
+
+shell.addEventListener('mousemove', () => {
+  document.getElementById('drag-hint').classList.add('hidden');
+}, { once: true });
+
+
+</script>
+</body>
+</html>
