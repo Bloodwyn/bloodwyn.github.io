@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="/styles.css">
   <style>
+    #container { position: relative; }
+
     /* ── column header bar (flex row, pans only horizontally) ── */
     #col-header-bar {
       flex: 0 0 auto;
@@ -150,6 +152,39 @@
       border-bottom: 1px solid #484848;
       box-sizing: border-box;
     }
+    /* Spacers: reserve grid height only, no visuals (the overlay draws the bar) */
+    #canvas-sep-row { height: 20px; }
+    .row-label-sep-cell { height: 20px; }
+
+    /* Single overlay bar spanning the row-label column + the canvas */
+    #overlap-bar {
+      position: absolute;
+      left: 0; right: 0;
+      height: 20px;
+      background: #e0e0e0;
+      border-top: 1px solid #888;
+      border-bottom: 1px solid #888;
+      box-sizing: border-box;
+      pointer-events: none;
+      z-index: 20;
+      overflow: hidden;
+    }
+    #sep-label {
+      position: absolute;
+      top: 0; height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: #777;
+      font-size: .73rem;
+      font-weight: 500;
+      letter-spacing: .07em;
+      white-space: nowrap;
+      transform: translateX(-50%);
+    }
+    .row-label-cell:has(+ .row-label-sep-cell) {
+      border-bottom: none;
+    }
 
     #drag-hint {
       position: fixed; bottom: 14px; left: 50%;
@@ -190,6 +225,7 @@
       <div id="canvas"></div>
     </div>
   </div>
+  <div id="overlap-bar"><span id="sep-label"><span>&#x2193;</span><span>producer-consumer overlap</span><span>&#x2193;</span></span></div>
 </div>
 
 <div id="drag-hint">drag to pan</div>
@@ -232,8 +268,8 @@ const CATS = {
   'indirect-multi-static':    { color: '#4a8faa', bg: '#e8f4f8', label: 'Multi Indirect' },
   'indirect-multi-dynamic':   { color: '#2d6e88', bg: '#ddeef5', label: 'Dynamic Multi Indirect' },
   'indirect-binding':         { color: '#5a60b8', bg: '#eaeafb', label: 'Dynamic Multi Indirect with Bindings' },
-  'indirect-command-buffer':  { color: '#6a5aaa', bg: '#ebe8f8', label: 'Indirect Command Buffer' },
-  'device-generated-commands':{ color: '#c07830', bg: '#fdf2e2', label: 'Device Generated Commands' },
+  'indirect-command-buffer':  { color: '#5a60b8', bg: '#eaeafb', label: 'Indirect Command Buffer' },
+  'device-generated-commands':{ color: '#6a5aaa', bg: '#ebe8f8', label: 'Device Generated Commands' },
   'mesh-shaders':             { color: '#c07820', bg: '#fdf0d8', label: 'Mesh Shaders' },
   'cuda-graphs':              { color: '#3a7a8a', bg: '#e0f0f4', label: 'CUDA Graphs Conditional Nodes' },
   'dynamic-parallelism':      { color: '#3a6e3a', bg: '#e5f3e5', label: 'Dynamic Parallelism' },
@@ -338,7 +374,7 @@ const cards = [
 
   // ── yBand 5: GPU generates full command streams (including PSO switches) ──
   {
-    col: 'vulkan', cat: 'device-generated-commands', yBand: 6,
+    col: 'vulkan', cat: 'device-generated-commands', yBand: 5,
     url: 'https://registry.khronos.org/vulkan/specs/latest/man/html/VK_EXT_device_generated_commands.html',
     name: 'vkCmdExecuteGeneratedCommandsEXT',
     version: 'VK_EXT_device_generated_commands',
@@ -347,28 +383,28 @@ const cards = [
 
   // ── yBand 4: geometry amplification ──────────────────────────────────────
   {
-    col: 'opengl', cat: 'mesh-shaders', yBand: 5,
+    col: 'opengl', cat: 'mesh-shaders', yBand: 6,
     url: 'https://registry.khronos.org/OpenGL/extensions/EXT/EXT_mesh_shader.txt',
     name: 'gl[Multi]DrawMeshTasks*EXT',
     version: 'GL_EXT_mesh_shader',
     info: `One GPU task/amplification thread group emits <span style="font-weight:600">one</span> <span style="font-weight:600">dynamic</span> dispatch grid of <span style="font-weight:600">mesh thread groups</span> together with a <span style="font-weight:600">small payload</span>.`,
   },
   {
-    col: 'directx', cat: 'mesh-shaders', yBand: 5,
+    col: 'directx', cat: 'mesh-shaders', yBand: 6,
     url: 'https://microsoft.github.io/DirectX-Specs/d3d/MeshShader.html',
     name: 'DispatchMesh',
     version: 'D3D12 Mesh Shader Tier 1 / SM 6.5',
     info: `One GPU task/amplification thread group emits <span style="font-weight:600">one</span> <span style="font-weight:600">dynamic</span> dispatch grid of <span style="font-weight:600">mesh thread groups</span> together with a <span style="font-weight:600">small payload</span>.`,
   },
   {
-    col: 'vulkan', cat: 'mesh-shaders', yBand: 5,
+    col: 'vulkan', cat: 'mesh-shaders', yBand: 6,
     url: 'https://registry.khronos.org/vulkan/specs/latest/man/html/VK_EXT_mesh_shader.html',
     name: 'vkCmdDrawMeshTasks*EXT',
     version: 'VK_EXT_mesh_shader',
     info: `One GPU task/amplification thread group emits <span style="font-weight:600">one</span> <span style="font-weight:600">dynamic</span> dispatch grid of <span style="font-weight:600">mesh thread groups</span> together with a <span style="font-weight:600">small payload</span>.`,
   },
   {
-    col: 'metal', cat: 'mesh-shaders', yBand: 5,
+    col: 'metal', cat: 'mesh-shaders', yBand: 6,
     url: 'https://developer.apple.com/documentation/metal/mtlmeshrenderpipelinedescriptor',
     name: 'drawMeshThreadgroups',
     version: 'Metal 3',
@@ -464,7 +500,7 @@ const cards = [
     info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">N</span> dispatches for the <span style="font-weight:600">current</span> pipeline using size, constants, and binding arguments from a <span style="font-weight:600">GPU buffer</span>. Count N is <span style="font-weight:600">dynamic</span>.`,
   },
   {
-    col: 'pal', cat: 'mesh-shaders', yBand: 5,
+    col: 'pal', cat: 'mesh-shaders', yBand: 6,
     url: 'https://github.com/GPUOpen-Drivers/pal/blob/dev/inc/core/palCmdBuffer.h',
     name: 'CmdDispatchMesh[Indirect]',
     version: 'PAL Core (GFX10.3+)',
@@ -490,8 +526,8 @@ const BAND_LABELS = [
   'Multi\nIndirect',              // 2
   'Dynamic Multi\nIndirect',      // 3
   'Dynamic Multi Indirect\nwith Bindings', // 4
-  'Mesh\nShaders',                // 5
-  'Device Generated\nCommands',   // 6
+  'Device Generated\nCommands',   // 5
+  'Mesh\nShaders',                // 6
   'Work\nGraphs',                 // 7
   'Device-Side\nKernel Launch',   // 8
 ];
@@ -515,8 +551,16 @@ canvas.style.position = 'absolute';
 canvas.style.top = '0';
 canvas.style.left = '0';
 canvas.style.width = totalW + 'px';
+// yBand 6+ are shifted by 1 to make room for the separator row after yBand 5
+const SEP_AFTER_BAND = 5;
+const SEP_GRID_ROW   = SEP_AFTER_BAND + 2; // 1-based grid row of the separator
+function bandToGridRow(band) {
+  return band <= SEP_AFTER_BAND ? band + 1 : band + 2;
+}
+const gridRows = numRows + 1; // one extra for the separator
+
 canvas.style.gridTemplateColumns = COLS.map(() => COL_W + 'px').join(' ');
-canvas.style.gridTemplateRows    = Array.from({length: numRows}, () => 'auto').join(' ');
+canvas.style.gridTemplateRows    = Array.from({length: gridRows}, () => 'auto').join(' ');
 
 // Column header cells
 COLS.forEach(col => {
@@ -547,13 +591,20 @@ cards.forEach(c => {
   byCell[key].push(c);
 });
 
+// Separator row spanning all columns
+const sepRow = document.createElement('div');
+sepRow.id = 'canvas-sep-row';
+sepRow.style.gridColumn = `1 / ${COLS.length + 1}`;
+sepRow.style.gridRow    = String(SEP_GRID_ROW);
+canvas.appendChild(sepRow);
+
 // Create one row-cell div per grid cell (even empty ones, to keep grid alignment)
 for (let row = 0; row < numRows; row++) {
   COLS.forEach((col, ci) => {
     const cell = document.createElement('div');
     cell.className = 'row-cell';
     cell.style.gridColumn = (ci + 1) + '';
-    cell.style.gridRow    = (row + 1) + '';
+    cell.style.gridRow    = String(bandToGridRow(row));
 
     const key = col.id + '|' + row;
     const cellCards = byCell[key] || [];
@@ -583,6 +634,7 @@ let dragging = false, moved = false;
 let startX = 0, startY = 0, startPanX = 0, startPanY = 0;
 let totalH = 0;
 const MAX_SCALE = 2.5;
+let baseRowHeights = [];
 
 function fitScale() {
   return Math.min(shell.clientWidth / totalW, shell.clientHeight / totalH);
@@ -609,9 +661,45 @@ function applyPan() {
   });
 
   rowLabelCanvas.style.transform = `translateY(${panY}px)`;
-  rowLabelCanvas.querySelectorAll('.row-label-cell').forEach(cell => {
+  rowLabelCanvas.querySelectorAll('.row-label-cell, .row-label-sep-cell').forEach(cell => {
     cell.style.height = (parseFloat(cell.dataset.baseH) * scale) + 'px';
   });
+
+  positionOverlapBar();
+}
+
+function positionOverlapBar() {
+  const bar = document.getElementById('overlap-bar');
+  if (!bar || !baseRowHeights.length) return;
+
+  const container = document.getElementById('container');
+  const contRect  = container.getBoundingClientRect();
+  const shellRect = shell.getBoundingClientRect();
+
+  // Vertical: sum scaled heights of the bands above the separator, offset by panY,
+  // relative to the shell's top inside the container.
+  const bandsAbove = baseRowHeights.slice(0, SEP_AFTER_BAND + 1)
+                                   .reduce((s, h) => s + h * scale, 0);
+  const top = (shellRect.top - contRect.top) + panY + bandsAbove;
+  bar.style.top = top + 'px';
+
+  // Horizontal: span from the row-label column's left edge to the container's right edge.
+  const labelColRect = document.getElementById('row-label-col').getBoundingClientRect();
+  bar.style.left  = (labelColRect.left - contRect.left) + 'px';
+  bar.style.right = '0';
+
+  // Hide the bar if it has scrolled out of the shell's vertical viewport.
+  const shellTopInCont = shellRect.top - contRect.top;
+  const shellBotInCont = shellRect.bottom - contRect.top;
+  bar.style.display = (top + 20 < shellTopInCont || top > shellBotInCont) ? 'none' : 'block';
+
+  // Center the label within the visible canvas area (to the right of the label column).
+  const sepLabel = document.getElementById('sep-label');
+  if (sepLabel) {
+    const canvasLeftInBar   = shellRect.left - labelColRect.left;
+    const visibleCanvasW    = shellRect.width;
+    sepLabel.style.left = (canvasLeftInBar + visibleCanvasW / 2) + 'px';
+  }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -625,14 +713,23 @@ window.addEventListener('DOMContentLoaded', () => {
   // robust against sub-pixel rounding and any edge cases).
   const rowHeights = {};
   canvas.querySelectorAll('.row-cell').forEach(cell => {
-    const rowKey = cell.style.gridRow; // e.g. "3"
+    const rowKey = cell.style.gridRow;
     const h = cell.getBoundingClientRect().height;
     rowHeights[rowKey] = Math.max(rowHeights[rowKey] || 0, h);
   });
 
   for (let row = 0; row < numRows; row++) {
-    const rowKey = String(row + 1);
-    const h = rowHeights[rowKey] || 0;
+    const gridRow = bandToGridRow(row);
+    const h = rowHeights[String(gridRow)] || 0;
+    baseRowHeights.push(h);
+
+    if (row === SEP_AFTER_BAND + 1) {
+      const sepCell = document.createElement('div');
+      sepCell.className = 'row-label-sep-cell';
+      sepCell.dataset.baseH = 20;
+      rowLabelCanvas.appendChild(sepCell);
+    }
+
     const label = document.createElement('div');
     label.className = 'row-label-cell';
     label.dataset.baseH = h;
@@ -646,6 +743,7 @@ window.addEventListener('DOMContentLoaded', () => {
   panY = 0;
   clampPan();
   applyPan();
+
 });
 
 // Mouse
