@@ -17,19 +17,19 @@
     }
     #col-header-inner {
       position: absolute;
-      top: 0; left: 0;
-      display: flex;
-      height: 100%;
+      top: 0; left: 0; right: 0; bottom: 0;
     }
     .col-header-cell {
-      flex: 0 0 auto;
+      position: absolute;
+      top: 0; height: 100%;
       display: flex; align-items: center; justify-content: center;
       background: #333; color: #fff;
       font-size: .85rem; font-weight: 700;
       letter-spacing: .04em;
       border-right: 1px solid #555;
       white-space: nowrap;
-      padding: 0 6px;
+      overflow: hidden;
+      box-sizing: border-box;
     }
 
     /* ── map column (header bar + map shell stacked) ── */
@@ -508,6 +508,7 @@ const rowLabelCanvas = document.getElementById('row-label-canvas');
 const totalW  = COLS.length * COL_W;
 const maxBand = Math.max(...cards.map(c => c.yBand));
 const numRows = maxBand + 1;
+const colHeaderCells = [];
 
 // Grid: one column per API, one row per yBand
 canvas.style.position = 'absolute';
@@ -523,6 +524,7 @@ COLS.forEach(col => {
   cell.className = 'col-header-cell';
   cell.style.width = COL_W + 'px';
   cell.textContent = col.label;
+  colHeaderCells.push(cell);
   colHeaderInner.appendChild(cell);
 });
 
@@ -574,25 +576,42 @@ for (let row = 0; row < numRows; row++) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PANNING
+// PANNING + ZOOMING
 // ─────────────────────────────────────────────────────────────────────────────
-let panX = 0, panY = 0;
+let panX = 0, panY = 0, scale = 1;
 let dragging = false, moved = false;
 let startX = 0, startY = 0, startPanX = 0, startPanY = 0;
 let totalH = 0;
+const MAX_SCALE = 2.5;
+
+function fitScale() {
+  return Math.min(shell.clientWidth / totalW, shell.clientHeight / totalH);
+}
 
 function clampPan() {
   const shellW = shell.clientWidth;
   const shellH = shell.clientHeight;
-  panX = Math.max(Math.min(0, shellW - totalW), Math.min(0, panX));
-  panY = Math.max(Math.min(0, shellH - totalH), Math.min(0, panY));
+  panX = Math.max(Math.min(0, shellW - totalW * scale), Math.min(0, panX));
+  panY = Math.max(Math.min(0, shellH - totalH * scale), Math.min(0, panY));
 }
 
+canvas.style.transformOrigin     = '0 0';
+colStripes.style.transformOrigin = '0 0';
+
 function applyPan() {
-  canvas.style.transform         = `translate(${panX}px,${panY}px)`;
-  colStripes.style.transform     = `translateX(${panX}px)`;
-  colHeaderInner.style.transform = `translateX(${panX}px)`;
+  canvas.style.transform     = `translate(${panX}px,${panY}px) scale(${scale})`;
+  colStripes.style.transform = `translateX(${panX}px) scaleX(${scale})`;
+
+  const cellW = COL_W * scale;
+  colHeaderCells.forEach((cell, i) => {
+    cell.style.left  = (panX + i * cellW) + 'px';
+    cell.style.width = cellW + 'px';
+  });
+
   rowLabelCanvas.style.transform = `translateY(${panY}px)`;
+  rowLabelCanvas.querySelectorAll('.row-label-cell').forEach(cell => {
+    cell.style.height = (parseFloat(cell.dataset.baseH) * scale) + 'px';
+  });
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -616,6 +635,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const h = rowHeights[rowKey] || 0;
     const label = document.createElement('div');
     label.className = 'row-label-cell';
+    label.dataset.baseH = h;
     label.style.height = h + 'px';
     label.innerHTML = (BAND_LABELS[row] || '').replace(/\n/g, '<br>');
     rowLabelCanvas.appendChild(label);
@@ -648,21 +668,69 @@ window.addEventListener('mouseup', () => {
   shell.classList.remove('dragging');
 });
 
-// Touch
-let t0 = null;
+// Touch: single-finger pan + two-finger pinch-zoom
+let t0 = null, t1 = null, startScale = 1, pinchMidX = 0, pinchMidY = 0;
+
+function touchDist(a, b) {
+  const dx = a.clientX - b.clientX, dy = a.clientY - b.clientY;
+  return Math.sqrt(dx*dx + dy*dy);
+}
+
 shell.addEventListener('touchstart', e => {
-  t0 = e.touches[0]; moved = false;
-  startPanX = panX; startPanY = panY;
+  if (e.touches.length === 1) {
+    t0 = e.touches[0]; t1 = null; moved = false;
+    startPanX = panX; startPanY = panY;
+  } else if (e.touches.length === 2) {
+    t0 = e.touches[0]; t1 = e.touches[1];
+    startScale = scale;
+    startPanX  = panX; startPanY = panY;
+    const rect = shell.getBoundingClientRect();
+    pinchMidX  = (t0.clientX + t1.clientX) / 2 - rect.left;
+    pinchMidY  = (t0.clientY + t1.clientY) / 2 - rect.top;
+  }
 }, { passive: true });
+
 shell.addEventListener('touchmove', e => {
-  if (!t0) return;
-  const dx = e.touches[0].clientX - t0.clientX;
-  const dy = e.touches[0].clientY - t0.clientY;
-  if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
-  panX = startPanX + dx; panY = startPanY + dy;
-  clampPan(); applyPan();
+  if (e.touches.length === 2 && t1) {
+    const a = e.touches[0], b = e.touches[1];
+    const dist0 = touchDist(t0, t1);
+    const dist1 = touchDist(a,  b);
+    const newScale = Math.max(fitScale(), Math.min(MAX_SCALE, startScale * dist1 / dist0));
+    const ratio    = newScale / startScale;
+    panX   = pinchMidX - ratio * (pinchMidX - startPanX);
+    panY   = pinchMidY - ratio * (pinchMidY - startPanY);
+    scale  = newScale;
+    clampPan(); applyPan();
+    moved = true;
+  } else if (e.touches.length === 1 && t0 && !t1) {
+    const dx = e.touches[0].clientX - t0.clientX;
+    const dy = e.touches[0].clientY - t0.clientY;
+    if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
+    panX = startPanX + dx; panY = startPanY + dy;
+    clampPan(); applyPan();
+  }
 }, { passive: true });
-shell.addEventListener('touchend', () => { t0 = null; });
+
+shell.addEventListener('touchend', () => { t0 = null; t1 = null; });
+
+shell.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect   = shell.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+
+  // ctrlKey signals a trackpad pinch gesture
+  const factor   = e.ctrlKey ? 1 - e.deltaY * 0.01 : e.deltaY < 0 ? 1.1 : 1 / 1.1;
+  const newScale = Math.max(fitScale(), Math.min(MAX_SCALE, scale * factor));
+  const ratio    = newScale / scale;
+
+  panX  = mouseX - ratio * (mouseX - panX);
+  panY  = mouseY - ratio * (mouseY - panY);
+  scale = newScale;
+
+  clampPan();
+  applyPan();
+}, { passive: false });
 
 shell.addEventListener('mousemove', () => {
   document.getElementById('drag-hint').classList.add('hidden');
