@@ -835,8 +835,11 @@ shell.addEventListener('touchmove', e => {
     const dist1 = touchDist(a,  b);
     const newScale = Math.max(fitScale(), Math.min(MAX_SCALE, startScale * dist1 / dist0));
     const ratio    = newScale / startScale;
-    panX   = pinchMidX - ratio * (pinchMidX - startPanX);
-    panY   = pinchMidY - ratio * (pinchMidY - startPanY);
+    const rect     = shell.getBoundingClientRect();
+    const curMidX  = (a.clientX + b.clientX) / 2 - rect.left;
+    const curMidY  = (a.clientY + b.clientY) / 2 - rect.top;
+    panX   = curMidX - ratio * (pinchMidX - startPanX);
+    panY   = curMidY - ratio * (pinchMidY - startPanY);
     scale  = newScale;
     clampPan(); applyPan();
     moved = true;
@@ -849,22 +852,53 @@ shell.addEventListener('touchmove', e => {
   }
 }, { passive: false });
 
-shell.addEventListener('touchend', () => { t0 = null; t1 = null; });
+shell.addEventListener('touchend', e => {
+  if (e.touches.length === 1) {
+    t0 = e.touches[0]; t1 = null; moved = false;
+    startPanX = panX; startPanY = panY;
+  } else {
+    t0 = null; t1 = null;
+  }
+});
+
+// Stateful mouse-vs-trackpad classifier. A physical wheel and a trackpad
+// two-finger drag both arrive as `wheel` with ctrlKey unset, so we infer the
+// device from delta shape — and remember recent trackpad activity so a
+// momentum flick (which can emit large clean-integer deltas that mimic a mouse
+// notch) stays classified as pan instead of causing a stray zoom.
+let lastTrackpadAt = -Infinity;
 
 shell.addEventListener('wheel', e => {
   e.preventDefault();
-  const rect   = shell.getBoundingClientRect();
-  const mouseX = e.clientX - rect.left;
-  const mouseY = e.clientY - rect.top;
+  const rect = shell.getBoundingClientRect();
+  const cx = e.clientX - rect.left;
+  const cy = e.clientY - rect.top;
+  const now = performance.now();
 
-  // ctrlKey signals a trackpad pinch gesture
-  const factor   = e.ctrlKey ? 1 - e.deltaY * 0.01 : e.deltaY < 0 ? 1.1 : 1 / 1.1;
-  const newScale = Math.max(fitScale(), Math.min(MAX_SCALE, scale * factor));
-  const ratio    = newScale / scale;
+  // Strong trackpad tells: horizontal component, fractional delta, or a small step.
+  const looksTrackpad = e.deltaMode === 0 &&
+    (e.deltaX !== 0 || !Number.isInteger(e.deltaY) || Math.abs(e.deltaY) < 50);
+  if (looksTrackpad) lastTrackpadAt = now;
 
-  panX  = mouseX - ratio * (mouseX - panX);
-  panY  = mouseY - ratio * (mouseY - panY);
-  scale = newScale;
+  // Treat as trackpad if this event looks like one, or we're mid-gesture
+  // (another trackpad event fired within the last 200ms). ctrlKey always wins → zoom.
+  const inTrackpadBurst = now - lastTrackpadAt < 200;
+  const isTrackpad = !e.ctrlKey && (looksTrackpad || inTrackpadBurst);
+
+  if (isTrackpad) {
+    // Two-finger drag → pan. A simultaneous pinch arrives as a separate ctrlKey
+    // event, so pan and zoom interleave frame-to-frame.
+    panX -= e.deltaX;
+    panY -= e.deltaY;
+  } else {
+    // Trackpad pinch (ctrlKey) or physical mouse wheel → zoom around the cursor.
+    const factor   = e.ctrlKey ? 1 - e.deltaY * 0.01 : (e.deltaY < 0 ? 1.1 : 1 / 1.1);
+    const newScale = Math.max(fitScale(), Math.min(MAX_SCALE, scale * factor));
+    const ratio    = newScale / scale;
+    panX  = cx - ratio * (cx - panX);
+    panY  = cy - ratio * (cy - panY);
+    scale = newScale;
+  }
 
   clampPan();
   applyPan();
