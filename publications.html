@@ -675,6 +675,88 @@ The evluation shows the method performing well w.r.t. error in most cases, when 
         lang: "glsl",
         repo: "https://github.com/Bloodwyn/Vertex-Blend-Attribute-Compression",
       },
+      reviews: [
+        [
+          { label: "Overall Recommendation", value: "4 (Borderline accept)" },
+          { label: "Evaluation Confidence", value: "3 (3 - Moderately confident, I know as much as most)" },
+          { label: "Summary", value: "This paper describes a set of techniques for encoding bone indices and weights for skinned meshes. These methods reduces the storage bits by up to 50% without introducing visible errors." },
+          { label: "Clarity of Exposition", value: "The exposition is clear." },
+          { label: "Technical Soundness", value: "I am convinced that the techniques presented in the paper will work." },
+          { label: "Quality of References", value: "References seems adequate to me." },
+          { label: "Reproducibility", value: "The results should be repreducible, since the algorithms and experiment set-ups has been described clearly, and key source code is also provided." },
+          { label: "Explanation of Recommendation", value: `This paper introduces an interesting algorithm to compress skin transform data and it is clear that it should work well in most cases. My major concern is to what extent is this algorithm useful in practice. In the best scenario presented by this paper, we are achieving a 2-byte reduction in storage per vertex. Given that a typical vertex representation ranges needs 20 bytes already to represent position, normal and tangent vectors with sufficient precision, the algorithm is achieving less than 10% overall compression rate in terms of raw bits. If you want to align vertices to 4-byte boundary, the reductions in bits may not turn into any reduction of overall memory footprint.
+
+The paper only measures results in 4-bone-per-vertex meshes. Latest game engines typically support more than 8 bones per vertex. I am curious how well the methods will perform for 8-bone meshes, particularly for the bone-index compression part of the story, since there will be significantly more unique tuple combinations that reduces the effectiveness of the technique.
+
+For these reasons I think the additional processing step and run-time overhead introduced by the technique may not worth its benefits in practice, although the algorithm itself is an interesting one.` },
+        ],
+        [
+          { label: "Overall Recommendation", value: "4 (Borderline accept)" },
+          { label: "Evaluation Confidence", value: "3 (3 - Moderately confident, I know as much as most)" },
+          { label: "Summary", value: "This paper proposes to compress vertex-blend attributes to reduce memory traffic and, in turn, speed up rendering.\nThe authors propose a variant of lossless dictionary-based compression for handling bone indices, and a tailored lossy quantization scheme for vertex weights." },
+          { label: "Clarity of Exposition", value: `I only have a shallow knowledge of animation systems, so take the following as the point of view of someone external to the field that is looking for insight and understanding.
+
+I would have appreciated some discussion on how the budget of vertex-blend attributes is commonly handled in current productions. Is 4 weights per vertex the norm, or is this restricted to key characters? Is it possible to use a variable number of weights per vertex (given that this would require additional bookkeeping)? In general, having more information of the context would have helped me better understand the motivation for the proposed compression scheme. For instance, what is the cost of animating characters in the frame budget for various typical scenarios (e.g. open-world game with a city environment)? Having read this paper, it is not clear to me what benefit could be expected in a practical scenario.
+
+My main gripe with the text is its liberal use of acronyms, including in section titles like "POT AABB (POT)". Acronyms often hinder understanding and I fear this may be the case in this paper. Sentences like "Fig. 3b shows that Any AABB reduces the number of invalid tuples over POT AABB." are uselessly cryptic. As far as I can tell, the key difference between "Any AABB" and "POT AABB" is that the formed offers a tight bounding box fit, and the improvement (less invalid tuples in this case) directly derives from this tighter fit. The naming convention ("POT AABB" and "Any AABB") does not help convey that information.
+
+Overall, the naming convention could benefit from focusing on conceptual differences, instead of technical ones. For instance, it is not clear how relevant the "power of two" notion is in the "POT AABB" scheme. The text mentions that the number of samples on each axis is a power of two, but not why. It took me a couple passes through the text to realize that the issue was that weights had to be encoded into "B" bits and that each bit would correspond to a single sampling grid point. In this context, "invalid tuples" are effectively wasted bits. It seems to me that this is an important high-level point to highlight, which the text appears to consider evident. Still, the focus on "POT AABB" versus "Any AABB" is maybe less insightful than "isotropic grid" versus "anisotropic grid", or "regular bounding box" versus "tight bounding box".
+
+Regarding the difference between "POT AABB" and "Any AABB", the observation that "Any AABB reduces the number of invalid tuples" is vague. The text could explicitly state the exact ratio of invalid tuples in both cases, and relate this to the quality evaluation in Figure 6.
+
+I would swap section 4.2 and 4.1. The fact that vertex weights are non-negative and sum up to 1 (which is mentioned in Section 4.2) is the basis of the "unit cube sampling" scheme described in Section 4.1.
+
+The text sometimes states things as matter of fact when the relation is not clear. For instance, in the sentence "To reduce invalid tuples, we sample each axis with a non-POT sample count and try to make the total sample count a POT", why would having the number of samples on each axis be a power of two or not have an impact on the ratio of invalid tuples?
+
+Section 4.5 and Figure 4, i.e. everything about simplex chopping, could be moved to the supplemental material since it is not used in practice.
+
+Initially, "i" is used as an index in the vertex weight array (Section 4.2, 4.3 and 4.4), but in Section 5 "i" represents the first axis of the weight space.` },
+          { label: "Technical Soundness", value: "The proposed compression scheme is sound." },
+          { label: "Quality of References", value: "The bone index compression scheme is reminiscent of standard dictionary-based schemes, and it would be appropriate to relate it to classical approaches (e.g. the LZW algorithm)." },
+          { label: "Reproducibility", value: "Yes, the work could be reproduced. The fact that the author implementation is provided is also very nice." },
+          { label: "Explanation of Recommendation", value: `Improving performance by reducing memory traffic through asset compression is an interesting topic, and this paper makes for an interesting read in this context.
+
+The approach taken for compressing data (dictionary-base for bone indices, and quantization for weights) is straightforward, but effective in practice.
+
+The main reason for my moderate grade is that I find it difficult to assess the practical impact of the proposed compression scheme. The example of Figure 1 contains only animated meshes and trivial shading. The improvement in this context is significant, but it is unclear how representative it is of real-world scenarios. Also, I would have liked to see how the proposed compression scheme compares to simply using fewer weights per vertex. Taking Figure 1 as an example, how would performance change when using 1 weight for models in the back, 2 weights for models in the middle, and 4 weights for models in the front (or any other naive level-of-detail strategy).` },
+        ],
+        [
+          { label: "Overall Recommendation", value: "5 (Accept)" },
+          { label: "Evaluation Confidence", value: "3 (3 - Moderately confident, I know as much as most)" },
+          { label: "Summary", value: `The paper presents a specialized compression for skinning data. The compression consists of two parts: index and weight compression. The index compression is a simple deduplication of ordered bone index sets, adding an indirection index. The weight compression is based on the space formed by convex weights and its uniform sampling.
+
+Unfortunately, the method is limited to four weights. Presumably, this limit appears to be caused by the unavailability of closed form solutions for higher dimensions and the impracticality of an iterative method for higher dimensions, though this is not explicitly stated.` },
+          { label: "Clarity of Exposition", value: "The paper is well written and very polished already. The figures are clear and aid understanding the concepts. Minor improvements can me made such as moving the observation that w_i < i^-1 further to the front or mentioning it in the figure caption(s) to clear up the coordinates in Figures 2 and 3." },
+          { label: "Technical Soundness", value: `Yes.
+
+> First, samples inside the simplex are distributed uniformly, since, in general, we must assume that all weights are equally likely.
+
+I would be curious to see if this is actually the case. It should be easy to support this with some evidence, such as a histogram of the distribution in the used sample models. A non-uniform sampling pattern would hint that additional compression could be gained with a corresponding entropy encoding.` },
+          { label: "Quality of References", value: `Yes, from what I can tell.
+
+Since vertex blending is certainly not the only application of convex weights, there might a similar method of compression applied in a different field already out there, but that's likely hard to find. On the other hand, due to the practical limitation to four weights, this method unfortunately may not generalize to other application areas though.` },
+          { label: "Reproducibility", value: "Yes. I especially like that source code is already provided for the review as supplementary material." },
+          { label: "Explanation of Recommendation", value: "Overall this is a well written paper with a novel method to compress vertex blending attributes. The problem however is exists in somewhat of a niche so the practicality and impact of the approach is limited. In typical application scenarios, animated meshes constitute a minority of the scene content and thus the overall impact of compressing vertex blending attributes on memory consumption and performance is likely negligible. Nevertheless, in research not every solution must have a major practical impact to be a valuable contribution to the scientific discourse. Therefore, I recommend acceptance of the paper." },
+        ],
+        [
+          { label: "Overall Recommendation", value: "5 (Accept)" },
+          { label: "Evaluation Confidence", value: "5 (5 - Extremely confident, I consider myself an expert)" },
+          { label: "Summary", value: "This paper presents a compression of linear blend skinning vertex data that produces results indistinguishable from the original skinning data. Due to the bandwidth reduction from the compressed data, their method was also faster on all of their sample data. The compression is a combination of recognizing that limited sets of transforms ever appear together, so can be compactly stored by an index into a table, and that the space of weights could be more efficiently encoded." },
+          { label: "Clarity of Exposition", value: `The exposition is OK, but not great. The discussion of the various weight sampling schemes is still somewhat confusing to follow, and though it has several explanatory figures, could use more and/or a better summary of the goal and "big picture" idea of each method before delving into the details.
+
+POT should be defined *before* it is used. In both Figure 3 and section 4.3, it's defined 2-3 sentences in after having been used multiple times. I know having things be powers of two (or not) happens all the time in graphics, none the less, seeing "POT" without context left me scratching my head until it was explained.` },
+          { label: "Technical Soundness", value: `I definitely think the paper is sound. It's one of those "why didn't I think of that" kind of papers, that is clearly going to have a benefit as soon as the idea is clear.
+
+However, I have great objections to the use of the phrase "visually lossless". This is meaningless, and needlessly confusing since it's clearly **not** lossless. Once (in section 5.2), they use the phrase "visually indistinguishable". Use that phrase instead!
+
+Give more information about the nature of the numerical issues mentioned in section 4.6. I have a pretty good idea of what kind of issues would crop up, but these kinds of things can be tricky to get right, so I want to know for sure what the authors experienced, and what (if any) analysis they did to confirm that their numerical index errors are no longer possible.` },
+          { label: "Quality of References", value: `The references seem adequate to me. I would probably add Le and Deng, "Two-layer sparse compression of dense-weight blend skinning", from 2013. This paper had a slightly different target and focus, but also included a dictionary and compression of weights
+
+Note that Col19 needs a publication location, and Dee95 is lacking much of the detail on the citation (this one maybe an @article that should be an @inproceedings?)` },
+          { label: "Reproducibility", value: "The details are sufficient, and additional source is provided as supplementary material" },
+          { label: "Explanation of Recommendation", value: "Overall, I do like this paper. I feel like its biggest problems are in the muddy explanation of the sampling strategies, especially the OSS, since that's the meat of the paper." },
+        ],
+      ],
       cite: `@inproceedings{kuth2021vbac,
   author    = {Kuth, Bastian and Meyer, Quirin},
   title     = {Vertex-Blend Attribute Compression},
