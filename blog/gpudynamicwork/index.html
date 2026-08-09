@@ -279,6 +279,7 @@ const COLS = [
   // Intel
   { id: 'levelzero', label: 'Level Zero (Intel)'   },
   // AMD
+  { id: 'mantle',    label: 'Mantle (AMD, historical)' },
   { id: 'pal',       label: 'PAL (AMD)'            },
   { id: 'hip',       label: 'HIP (AMD)'            },
 ];
@@ -294,6 +295,7 @@ const CATS = {
   'device-generated-commands':{ color: '#6a5aaa', bg: '#ebe8f8', label: 'Device Generated Commands' },
   'mesh-shaders':             { color: '#c07820', bg: '#fdf0d8', label: 'Mesh Shaders' },
   'cuda-graphs':              { color: '#3a7a8a', bg: '#e0f0f4', label: 'CUDA Graphs Conditional Nodes' },
+  'command-buffer-scheduler': { color: '#8a6a2a', bg: '#f5ecd8', label: 'Command Buffer Control Flow' },
   'dynamic-parallelism':      { color: '#3a6e3a', bg: '#e5f3e5', label: 'Dynamic Parallelism' },
   'work-graphs':              { color: '#b03030', bg: '#fce8e8', label: 'Work Graphs / Execution Graphs' },
   'placeholder':              { color: 'transparent', bg: 'transparent', label: '' },
@@ -405,28 +407,28 @@ const cards = [
 
   // ── yBand 4: geometry amplification ──────────────────────────────────────
   {
-    col: 'opengl', cat: 'mesh-shaders', yBand: 6,
+    col: 'opengl', cat: 'mesh-shaders', yBand: 7,
     url: 'https://registry.khronos.org/OpenGL/extensions/EXT/EXT_mesh_shader.txt',
     name: 'gl[Multi]DrawMeshTasks*EXT',
     version: 'GL_EXT_mesh_shader',
     info: `One GPU task/amplification thread group emits <span style="font-weight:600">one</span> <span style="font-weight:600">dynamic</span> dispatch grid of <span style="font-weight:600">mesh thread groups</span> together with a <span style="font-weight:600">small payload</span>.`,
   },
   {
-    col: 'directx', cat: 'mesh-shaders', yBand: 6,
+    col: 'directx', cat: 'mesh-shaders', yBand: 7,
     url: 'https://microsoft.github.io/DirectX-Specs/d3d/MeshShader.html',
     name: 'DispatchMesh',
     version: 'D3D12 Mesh Shader Tier 1 / SM 6.5',
     info: `One GPU task/amplification thread group emits <span style="font-weight:600">one</span> <span style="font-weight:600">dynamic</span> dispatch grid of <span style="font-weight:600">mesh thread groups</span> together with a <span style="font-weight:600">small payload</span>.`,
   },
   {
-    col: 'vulkan', cat: 'mesh-shaders', yBand: 6,
+    col: 'vulkan', cat: 'mesh-shaders', yBand: 7,
     url: 'https://registry.khronos.org/vulkan/specs/latest/man/html/VK_EXT_mesh_shader.html',
     name: 'vkCmdDrawMeshTasks*EXT',
     version: 'VK_EXT_mesh_shader',
     info: `One GPU task/amplification thread group emits <span style="font-weight:600">one</span> <span style="font-weight:600">dynamic</span> dispatch grid of <span style="font-weight:600">mesh thread groups</span> together with a <span style="font-weight:600">small payload</span>.`,
   },
   {
-    col: 'metal', cat: 'mesh-shaders', yBand: 6,
+    col: 'metal', cat: 'mesh-shaders', yBand: 7,
     url: 'https://developer.apple.com/documentation/metal/mtlmeshrenderpipelinedescriptor',
     name: 'drawMeshThreadgroups',
     version: 'Metal 3',
@@ -444,14 +446,14 @@ const cards = [
 
   // ── yBand 6: device-side kernel launch, manual memory ────────────────────
   {
-    col: 'cuda', cat: 'dynamic-parallelism', yBand: 8,
+    col: 'cuda', cat: 'dynamic-parallelism', yBand: 9,
     url: 'https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/dynamic-parallelism.html',
     name: 'Dynamic Parallelism (CDP2)',
     version: 'CUDA 12+ / Compute Capability 9.0+',
     info: `A shader can directly <span style="font-weight:600">dispatch</span> other <span style="font-weight:600">shaders</span> with <span style="font-weight:600">dynamic</span> grid sizes and a <span style="font-weight:600">small payload</span>. Child dispatches can run <span style="font-weight:600">asynchronously</span>, be <span style="font-weight:600">enqueued</span> after the parent, or the parent can <span style="font-weight:600">wait</span> for them to finish.`,
   },
   {
-    col: 'opencl', cat: 'dynamic-parallelism', yBand: 8,
+    col: 'opencl', cat: 'dynamic-parallelism', yBand: 9,
     url: 'https://registry.khronos.org/OpenCL/sdk/2.0/docs/man/xhtml/enqueue_kernel.html',
     name: 'enqueue_kernel',
     version: 'OpenCL 2.0 (optional in 3.0)',
@@ -476,21 +478,21 @@ const cards = [
 
   // ── yBand 7: work graphs ──────────────────────────────────────────────────
   {
-    col: 'directx', cat: 'work-graphs', yBand: 7,
+    col: 'directx', cat: 'work-graphs', yBand: 8,
     url: 'https://microsoft.github.io/DirectX-Specs/d3d/WorkGraphs.html',
     name: 'DispatchGraph',
     version: 'D3D12 Agility SDK 1.613+',
     info: `A <span style="font-weight:600">Work Graph</span> is a <span style="font-weight:600">DAG</span> (max depth 32) of shaders where edges define which nodes can create work for others. Work can be parametrized with a <span style="font-weight:600">small payload</span> and created as <span style="font-weight:600">per thread</span>, <span style="font-weight:600">multiple threads in a group</span>, or as a whole <span style="font-weight:600">static or dynamic grid</span>. Launched <span style="font-weight:600">children</span> can <span style="font-weight:600">overlap</span> with parent execution.`,
   },
   {
-    col: 'directx', cat: 'work-graphs', yBand: 7,
+    col: 'directx', cat: 'work-graphs', yBand: 8,
     url: 'https://microsoft.github.io/DirectX-Specs/d3d/WorkGraphs.html#mesh-nodes',
     name: 'Mesh Nodes',
     version: 'D3D12 Agility SDK 1.715-preview+',
     info: `Extends Work Graphs with <span style="font-weight:600">mesh shader pipeline leaf nodes</span>, enabling fully GPU-driven <span style="font-weight:600">graphics PSO switches</span> from within a work graph without CPU involvement.`,
   },
   {
-    col: 'vulkan', cat: 'work-graphs', yBand: 7,
+    col: 'vulkan', cat: 'work-graphs', yBand: 8,
     url: 'https://registry.khronos.org/vulkan/specs/latest/man/html/VK_AMDX_shader_enqueue.html',
     name: 'vkCmdDispatchGraphAMDX',
     version: 'VK_AMDX_shader_enqueue (provisional, AMD-only)',
@@ -504,6 +506,22 @@ const cards = [
     name: '<span style="color:#aaa;font-style:italic;font-weight:normal;display:block;text-align:center">Page intentionally left blank.</span>',
     version: '',
     info: '',
+  },
+
+  // ── Mantle (AMD, historical) ─────────────────────────────────────────────
+  {
+    col: 'mantle', cat: 'indirect-single', yBand: 1,
+    url: 'https://www.amd.com/en/developer/resources/archive/mantle.html',
+    name: 'grCmdDraw[Indexed]Indirect<br>grCmdDispatchIndirect',
+    version: 'Mantle Core (2014)',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">one</span> dispatch for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>.`,
+  },
+  {
+    col: 'mantle', cat: 'command-buffer-scheduler', yBand: 6,
+    url: 'https://www.amd.com/en/developer/resources/archive/mantle.html',
+    name: 'Command Buffer Control Flow',
+    version: 'Mantle GR_CONTROL_FLOW ext (2014)',
+    info: `The <span style="font-weight:600">GR_CONTROL_FLOW</span> extension adds <span style="font-weight:600">IF/ELSE</span> and <span style="font-weight:600">WHILE</span> blocks to the command buffer, with the condition read from a <span style="font-weight:600">GPU buffer</span> at execution time. Combined with <span style="font-weight:600">grCmdDispatchIndirect</span>, dispatch size is also GPU buffer-driven, letting a recorded command buffer act as a <span style="font-weight:600">GPU-driven scheduler</span> with no CPU round-trip.`,
   },
 
   // ── PAL (AMD) ────────────────────────────────────────────────────────────
@@ -522,14 +540,14 @@ const cards = [
     info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">N</span> dispatches for the <span style="font-weight:600">current</span> pipeline using size, constants, and binding arguments from a <span style="font-weight:600">GPU buffer</span>. Count N is <span style="font-weight:600">dynamic</span>.`,
   },
   {
-    col: 'pal', cat: 'mesh-shaders', yBand: 6,
+    col: 'pal', cat: 'mesh-shaders', yBand: 7,
     url: 'https://github.com/GPUOpen-Drivers/pal/blob/dev/inc/core/palCmdBuffer.h',
     name: 'CmdDispatchMesh[Indirect]',
     version: 'PAL Core (GFX10.3+)',
     info: `One GPU task/amplification thread group emits <span style="font-weight:600">one</span> <span style="font-weight:600">dynamic</span> dispatch grid of <span style="font-weight:600">mesh thread groups</span> together with a <span style="font-weight:600">small payload</span>.`,
   },
   {
-    col: 'pal', cat: 'work-graphs', yBand: 7,
+    col: 'pal', cat: 'work-graphs', yBand: 8,
     url: 'https://github.com/GPUOpen-Drivers/pal',
     name: 'Shader Enqueue',
     version: 'PAL Core (GFX11+, internal)',
@@ -549,9 +567,10 @@ const BAND_LABELS = [
   'Dynamic Multi\nIndirect',      // 3
   'Dynamic Multi Indirect\nwith Bindings', // 4
   'Device Generated\nCommands',   // 5
-  'Mesh\nShaders',                // 6
-  'Work\nGraphs',                 // 7
-  'Device-Side\nKernel Launch',   // 8
+  'Command Buffer\nControl Flow', // 6
+  'Mesh\nShaders',                // 7
+  'Work\nGraphs',                 // 8
+  'Device-Side\nKernel Launch',   // 9
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -573,8 +592,8 @@ canvas.style.position = 'absolute';
 canvas.style.top = '0';
 canvas.style.left = '0';
 canvas.style.width = totalW + 'px';
-// yBand 6+ are shifted by 1 to make room for the separator row after yBand 5
-const SEP_AFTER_BAND = 5;
+// yBand 7+ are shifted by 1 to make room for the separator row after yBand 6
+const SEP_AFTER_BAND = 6;
 const SEP_GRID_ROW   = SEP_AFTER_BAND + 2; // 1-based grid row of the separator
 const SEP_BASE_H     = 20;    // px, unscaled height of the separator row
 const SEP_BASE_FONT  = 0.73;  // rem, unscaled label font size
@@ -861,12 +880,22 @@ shell.addEventListener('touchend', e => {
   }
 });
 
-// Stateful mouse-vs-trackpad classifier. A physical wheel and a trackpad
-// two-finger drag both arrive as `wheel` with ctrlKey unset, so we infer the
-// device from delta shape — and remember recent trackpad activity so a
-// momentum flick (which can emit large clean-integer deltas that mimic a mouse
-// notch) stays classified as pan instead of causing a stray zoom.
-let lastTrackpadAt = -Infinity;
+// Wheel input, modelled on Mapbox GL JS's scroll_zoom classifier. A physical
+// wheel and a trackpad two-finger drag arrive as the same DOM event, so the
+// device is inferred from delta shape. The verdict is STICKY for the duration of
+// a gesture (re-deciding on every event is what made the mode flip-flop
+// mid-scroll), and resets once the input goes idle.
+const GESTURE_IDLE_MS = 400;
+let wheelType   = null;       // 'wheel' | 'trackpad', null while undecided
+let lastWheelAt = -Infinity;
+
+function classifyWheel(e) {
+  if (e.deltaMode !== 0) return 'wheel';      // line/page mode: only real wheels
+  if (e.deltaX !== 0)    return 'trackpad';   // horizontal component
+  // A wheel notch is coarse (100/120, or DPI-scaled); anything finer is a trackpad.
+  // No Number.isInteger test; display scaling makes real wheels emit e.g. 133.33.
+  return Math.abs(e.deltaY) < 50 ? 'trackpad' : 'wheel';
+}
 
 shell.addEventListener('wheel', e => {
   e.preventDefault();
@@ -875,17 +904,16 @@ shell.addEventListener('wheel', e => {
   const cy = e.clientY - rect.top;
   const now = performance.now();
 
-  // Strong trackpad tells: horizontal component, fractional delta, or a small step.
-  const looksTrackpad = e.deltaMode === 0 &&
-    (e.deltaX !== 0 || !Number.isInteger(e.deltaY) || Math.abs(e.deltaY) < 50);
-  if (looksTrackpad) lastTrackpadAt = now;
+  // A gap longer than GESTURE_IDLE_MS means the previous gesture ended.
+  if (now - lastWheelAt > GESTURE_IDLE_MS) wheelType = null;
+  lastWheelAt = now;
 
-  // Treat as trackpad if this event looks like one, or we're mid-gesture
-  // (another trackpad event fired within the last 200ms). ctrlKey always wins → zoom.
-  const inTrackpadBurst = now - lastTrackpadAt < 200;
-  const isTrackpad = !e.ctrlKey && (looksTrackpad || inTrackpadBurst);
+  // ctrlKey is a trackpad pinch: always zoom, and mark the gesture as trackpad so
+  // a two-finger drag continuing after the pinch still pans.
+  if (e.ctrlKey)        wheelType = 'trackpad';
+  else if (!wheelType)  wheelType = classifyWheel(e);
 
-  if (isTrackpad) {
+  if (!e.ctrlKey && wheelType === 'trackpad') {
     // Two-finger drag → pan. A simultaneous pinch arrives as a separate ctrlKey
     // event, so pan and zoom interleave frame-to-frame.
     panX -= e.deltaX;
