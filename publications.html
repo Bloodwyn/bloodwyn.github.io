@@ -45,6 +45,112 @@
         lang: "cpp",
         repo: "https://github.com/CoburgGraphicsLab/AdaptiveBezierSubdivision",
       },
+      reviews: [
+        [
+          { label: "Summary and Impact on Community", value: `The paper tackles view-adaptive, crack-free GPU tessellation of Bezier surfaces. They construct an algorithm that efficiently maps to to GPU work graphs.
+Efficient view-adaptive tessellation is a relevant topic for realtime rendering of paramtric surfaces. The approach can be applied to Catmull-Clark subdivision surfaces, when using an approximation of the tangent plane at extraordinary vertices. Efficiently mapping irregular workloads for adaptive tesselation, crack-free results is one of the main challenges in this area.` },
+          { label: "Clarity of Exposition", value: "2 = requires much effort" },
+          { label: "Comment", value: `The introduction, motivation and related work are well-written. The background section on bezier curves and surfaces is a useful recap, and referring to the concept of blossoms is useful in the context of edge continuity evaluation rules.
+
+Some of parts of the paper, in particular Sec 3., lack clarity and are hard to parse and could be improved. In Section 3.3.1, the argument on why discontinuities occur at b even though that is the first iteration of refinement, as opposed to "a" which is constructed by rescaling a/b and thus more prone to numerical imprecisions.
+What leads to blossoms preserving contuinity could be described in more detail, and then why floating-point operations not being associative leading to inconsistent operations as stated. Here it would help to illustrate where associativity would be needed.
+
+Section 3.3.2 is also very brief. Mapping the refinement rule to the code snippet with 4 layers of nesting could be helped with by showing a schematic diagram.
+What specifically is meant by cross-like operation order and pair-parenthesis could be more clear.
+
+Sec. 3.4. is encoding concepts that could be more easily illustrated in a schema than described in words. Explaining how the crack-fixing logic does not require any communication between patches could be made clearer. The two-tier subdivision criterion is using information that is not restricted to the common edge. A patch is refined when ANY of the edges or the interior criterion kicks in, therefore the question arises how a neighboring patch could know this information during parallel execution isn't clear. This is a key aspect of the algorithm though so it would need to be better explained. How can the crack-fixing logic bet communication and syncronization free if the information that feeds into the subdivision criterion is not shared/local?
+
+I had difficulty to find Figure 5d useful.` },
+          { label: "Quality of References", value: "Adequate. NVIDIA MegaGeometry could be considered to be cited. They emply dynamic adaptive tessellation of CC patches with shared edge rules." },
+          { label: "Originality", value: "6 = acceptable" },
+          { label: "Technical Soundness", value: "The paper appears technically sound, but I am unsure which aspects are genuinely novel. Wedges have previously been used to connect different levels of detail during tessellation to achieve crack-free results, such as in Strugar (2009). Runtime subdivision and tessellation are also well-established techniques, although many practitioners now prefer compute shaders due to the overhead of tessellation shaders. As a result, it is unclear to me what the key novelty of this work is. I would be happy to lift my score if the authors address these concerns in their rebuttal." },
+          { label: "Evaluation Confidence", value: "1 = doubtful" },
+          { label: "Overall Recommendation", value: "4 = dubious. I would lean towards rejection" },
+          { label: "Symposium-only", value: "Yes" },
+          { label: "Best Paper?", value: "NO" },
+          { label: "Explanation of Rating", value: "As mentioned, I lean toward rejection due to concern about limited novelty." },
+        ],
+        [
+          { label: "Summary and Impact on Community", value: `The paper proposes a method to adaptively tessellate Bezier patches that guarantees no cracks between micropolygons, and describes an efficient GPU implementation.  The practical details to ensure consistent floating-point results are described very well.
+
+Bezier patches are rarely used for modelling these days (other than the famous Utah teapot), but are often used for rendering subdivision surfaces (away from extraordinary vertices).  So this is a useful topic.` },
+          { label: "Clarity of Exposition", value: "3 = clear and effort adequate with respect to content" },
+          { label: "Comment", value: "The paper is very well organized and easy to read.  Very few typos.  Section 2.1 provides a nice overview/recap of the properties of Bezier patches.  The code snippets are clear and useful for understanding the algorithms.  The figures are good at illustrating the resulting tessellations, the cracks produced by other methods, crack-filling wedges, and more.  The movie is nice too." },
+          { label: "Quality of References", value: "Yes the references are adequate, but the authors take credit for introducing parametric domain subdivision which was described in [EL10] (and invented even earlier).  More on this below." },
+          { label: "Originality", value: "7 = good" },
+          { label: "Comment", value: "The technique to carefully add wedges only where needed and deliberately reverse the point order to ensure consistency of some floating-point operations is inspiring." },
+          { label: "Technical Soundness", value: "Yes, I am convinced that the method works as advertised and is adequately evaluated against commonly-used hardware tessellation." },
+          { label: "Evaluation Confidence", value: "2 = confident" },
+          { label: "Overall Recommendation", value: "6 = acceptable. I would argue for acceptance" },
+          { label: "Symposium-only", value: "Not Applicable" },
+          { label: "Best Paper?", value: "NO" },
+          { label: "Explanation of Rating", value: `The results are good: the method is efficient in both memory and execution time, and results in fewer micropolygons to render than comparable widely-used methods.
+
+My main "issue" with this paper is that (if I'm reading it correctly) it takes credit for introducing splitting using the parametric (u,v) domain -- which saves a lot of memory compared to explicitly computing and storing the Bezier control mesh of all the smaller Bezier sub-patches.  In the Introduction it says: "... we make the following contributions: * We propose a sparse representation for sub-patches ...".  But under Related Work (section 2.2), it says "... sparse sub-patches representations similar to ours were proposed [EL10,Eis11]".  Since those two references already used the sparse representation, it should not be claimed as a major new contribution of the present paper.  This could probably be fixed by re-wording a few sentences in the abstract, introduction and conclusion, and explicitly referencing [EL10] and/or [Eis11] again in section 3.1?
+
+(I have been told that the same parametric subdivision was already implemented for NURBS patches in Pixar's RenderMan renderer by Matt Pharr back in ~1998.  But I don't know if that was ever published.  If not, then the two Eisenacher references are probably sufficient.)
+
+Details and typos:
+- Page 3: determine -> Determine
+- The first code snippet on page 5 needs a sentence describing it.  E.g: "As shown in the following code snippet ...:".
+- Page 5: in respect -> with respect
+- Page 6: ready-for rendering -> ready-for-rendering
+
+References:
+- Many of the SIGGRAPH paper and course references are way too long and detailed.  Waste of space -- EGSR readers know what they are and where to find them.  Instead of e.g. "In Proceedings of the Special Interest Group on Computer Graphics and Interactive Techniques Conference Courses (New York, NY, USA, 2005), SIGGRAPH Courses 2025", just "SIGGRAPH Course, 2025" would be sufficient.  And "ACM" is sufficient instead of "Association of Computing Machinery".
+- [Far02]: Book title should be capitalized.
+- [NKF*16,SS09]: CGF should be written out.` },
+        ],
+        [
+          { label: "Summary and Impact on Community", value: "This paper presents a GPU Bezier subdivision method. The surface can be generated adaptively and crack-free between patches via wedges." },
+          { label: "Clarity of Exposition", value: "3 = clear and effort adequate with respect to content" },
+          { label: "Comment", value: `I understand Bézier subdivision, but I found the paper difficult to follow due to notation and symbol issues.
+1. The dot product notation is misused or overused throughout the paper.
+2. Scalars and vectors are not clearly distinguished. For example, what does u = u_1 = u_2 = u_3 mean?
+3. How are the Bézier properties discussed in Section 2.1 related to the proposed method?` },
+          { label: "Quality of References", value: `Strugar, Filip. "Continuous distance-dependent level of detail for rendering heightmaps." Journal of graphics, GPU, and game tools 14.4 (2009): 57-74.` },
+          { label: "Originality", value: "4 = dubious" },
+          { label: "Technical Soundness", value: "The paper appears technically sound, but I am unsure which aspects are genuinely novel. Wedges have previously been used to connect different levels of detail during tessellation to achieve crack-free results, such as in Strugar (2009). Runtime subdivision and tessellation are also well-established techniques, although many practitioners now prefer compute shaders due to the overhead of tessellation shaders. As a result, it is unclear to me what the key novelty of this work is. I would be happy to lift my score if the authors address these concerns in their rebuttal." },
+          { label: "Evaluation Confidence", value: "2 = confident" },
+          { label: "Overall Recommendation", value: "4 = dubious. I would lean towards rejection" },
+          { label: "Symposium-only", value: "No" },
+          { label: "Best Paper?", value: "NO" },
+          { label: "Explanation of Rating", value: "As mentioned, I lean toward rejection due to concern about limited novelty." },
+        ],
+        [
+          { label: "Summary and Impact on Community", value: `The paper proposes a GPU algorithm for recursively subdividing bicubic Bézier patches in a view-adaptive, crack-free manner. The method stores each sub-patch as a compact quad-tree node rather than materializing all Bézier control points. It reconstructs sub-patch Bézier points using tensor-product blossom evaluation with carefully fixed floating-point operation order. It then renders each sufficiently flat quad node with two triangles and optionally adds wedge triangles to close cracks against neighboring nodes at coarser subdivision levels. The implementation uses Direct3D GPU work graphs, comparing against execute-indirect and hardware tessellation. The authors report lower memory than execute-indirect, fewer triangles than hardware tessellation, and competitive or faster render times in their test scene.
+I love the elegant and practical sub-patch representation, while the tensor-product blossom reconstruction is technically interesting.
+the paper's method is practical in various computer graphics fields, such as game engine and real time rendering.` },
+          { label: "Clarity of Exposition", value: "3 = clear and effort adequate with respect to content" },
+          { label: "Comment", value: `various equations miss the latex reference
+code should place in the Listing 1,2,3...
+Typo in code at top of page 6, should the last one be p[3]?
+
+"computer aided geomtric design" -> "computer-aided geometric design."
+"in respect to its parent" -> "with respect to its parent."` },
+          { label: "Quality of References", value: "good from my knowledge" },
+          { label: "Originality", value: "7 = good" },
+          { label: "Comment", value: "the method is elegant and novel." },
+          { label: "Technical Soundness", value: `One thing I notice is that the paper didn't discuss much on the watertightness claim assumptions. The paper argues that fixed floating-point operation order makes neighboring patches evaluate identical positions. This depends on strong assumptions: identical shared boundary control points, consistent parameter orientation... I'm not sure if the paper should state these assumptions should be stated explicitly, or requires more formal proves here.
+
+The validation seems to be the weak part for me:
+The reported render times are impressive, especially because all methods are sub-millisecond at 4K. But the differences are sometimes small. For example, at \\lambda = 0.5 and \\eps = 0.5, hardware tessellation is slightly faster than work graphs; at \\eps = 1 or 2, work graphs become faster. The paper's conclusion should be phrased carefully: the method is not always faster than hardware tessellation at comparable visual quality, but it can be faster in cases where it produces substantially fewer triangles.
+
+The memory comparison is interesting but needs clarification. The execute-indirect memory formula uses a maximum depth of 6 and requires 1.44 GiB, while the work-graphs version supports depth 10 with 26.39 MiB backing memory. This is a strong result, but the comparison might not fair enough to me. The paper should explain exactly what is included in both memory numbers and whether the work graph runtime can spill, fail, or dynamically allocate under worst-case subdivision.
+
+There are some concerns I might also want to ask:
+Does the subdivision criterion provide a strict upper bound on screen-space error, or is it a heuristic?
+What are the exact assumptions required for watertightness? Are shared boundary control points required to be bitwise identical?
+How does performance scale with patch count, curvature, camera distance, and resolution?
+Can wedge triangles overlap neighboring triangles or create depth fighting under large depth differences?
+How sensitive are the results to λ? A plot of λ versus FLIP error, triangle count, and render time would be useful.` },
+          { label: "Evaluation Confidence", value: "2 = confident" },
+          { label: "Overall Recommendation", value: "6 = acceptable. I would argue for acceptance" },
+          { label: "Symposium-only", value: "Yes" },
+          { label: "Best Paper?", value: "NO" },
+          { label: "Explanation of Rating", value: "The paper has a strong practical contribution and a nice fit between recursive subdivision and GPU work graphs. The compact representation, tensor-product reconstruction, and synchronization-free wedge crack closure are valuable. I also concern is if a single scene validation is enough for this paper. I would see what other reviewer think on this part. From my view, the paper can be accepted if the system and theory is solid enough with weak validation, which I still think the paper meets my requirement." },
+        ],
+      ],
       cite: `@inproceedings{tabaei2026beziersubdiv,
   author    = {Tabaei, Seyedmasih and Kuth, Bastian and Oberberger, Max and Meyer, Quirin},
   title     = {{GPU} View-Adaptive Crack-Free Subdivision of {B\\'{e}zier} Surfaces},
@@ -83,6 +189,76 @@
         lang: "cpp",
         repo: "https://github.com/Bloodwyn/gptree",
       },
+      reviews: [
+        [
+          { label: "Summary", value: "The paper presents a work graph-based tree generation algorithm that can generate entire trees from the trunk to branches and leaves including adjustments for different seasons, environmental influence and wind. Furthermore, the approach can generate level-of-detail and considers culling. Thus, it is useable for per-frame generation and real-time rendering, generating complex geometry from very few control parameters and only keeps data around for rendering a single frame." },
+          { label: "Clarity of Exposition", value: "The paper is clear." },
+          { label: "Technical Soundness", value: "The paper is technically sound." },
+          { label: "Quality of References", value: `The references are mostly fine. I definitely would have cited the following paper.
+Steinberger, Markus, et al. "On‐the‐fly generation and rendering of infinite cities on the GPU." Computer graphics forum. Vol. 33. No. 2. 2014.
+Procedural generation on the GPU, including frustum and visibility culling and level of detail.` },
+          { label: "Reproducibility", value: "The core of the approach is definitely reproducible. Whether the exact timings can be achieved when someone less experienced is implementing it is questionable." },
+          { label: "Evaluation Confidence", value: "4 - Pretty confident, I know this area well" },
+          { label: "Overall Recommendation", value: "3 - Borderline reject" },
+          { label: "Explanation of Recommendation", value: `In general, I like the paper. I like work graphs and I like procedural generation. However, the paper to me is a technical demo, but not really a technical paper. Certainly, a lot of engineering effort went into the work and it clearly works well with the results looking good. However, there is little to no insight to be found here compared to the standard literature on GPU procedural generation combined with work graphs. To me even last year's HPG procedural generation with work graphs paper was very borderline in terms of contribution, but it showed that work graphs can be used for procedural generation on the GPU.
+I can potentially see this paper as a system paper, but for a system paper, it does not explore different options or discusses the choices made in enough detail. I did not get the feeling that the community could benefit much from reader the paper either.
+Potentially I am missing something here, but from my point of view, I cannot recommend the paper for acceptance to a scientific conference, even if the conference has very strong ties to industry.` },
+        ],
+        [
+          { label: "Summary", value: "The paper presents a modern shader-pipeline to drive rendering of vegetation in a GPU-only way. Based on minimal data the pipeline renders trees following established algorithms, but with all model-generation executed during rendering." },
+          { label: "Clarity of Exposition", value: "The exposition is reasonably clear to me.\nIt would be clearer if code was attached. See also reproducibility.\n\nThe description of work graphs and the concrete graph used, which is the major contribution here, is somewhat superficial. This might be due to me not having test-driven this new feature yet, though." },
+          { label: "Technical Soundness", value: "The method seems sound." },
+          { label: "Quality of References", value: "I noticed a few sloppyness issues with the references, but nothing major:\n- Lee et al is actually Li\n- Grag is Garg" },
+          { label: "Reproducibility", value: "I don't really feel that the work is reproducible with reasonable effort. The technical description feels rather short (but see my caveat mentioned above) and there is no code attached at all. For such a, seemingly large, system I would have liked to see more details." },
+          { label: "Evaluation Confidence", value: "3 - Moderately confident, I know as much as most" },
+          { label: "Overall Recommendation", value: "5 - Accept" },
+          { label: "Explanation of Recommendation", value: `I would accept this paper, given that a few minor issues are taken care of, and given that a stronger effort towards reproducibility is made. Does not have to be the entire code, but some at least.
+
+I think the implemented system is in scope and the evaluation is promising.
+
+Minor issues (see also references)
+- In the contribution you state that your work is the first employing work graphs, but then you cite KOF*24, I read a contradiction here
+- Are the numbers reported for KS18 in order?
+- "Steinberger an co-workers" I'd go for "et al"
+- Figures are commonly placed in order of them being referenced in the text. Therefore I would switch Fig 3 and 4
+- In Sec4 1,200 trees is typeset a little awkwardly (I think something like 1{},200 or such might do the trick)
+- Sec5: "explorer" -> "explore"` },
+        ],
+        [
+          { label: "Summary", value: "The paper presents a method to generate trees in real-time in the GPU, achieving a massive reduction in memory usage. The technique relies on recent mesh nodes." },
+          { label: "Clarity of Exposition", value: "The paper is mainly clear but many technical details are difficult to follow. With some more figs this could be mostly fixed easily." },
+          { label: "Technical Soundness", value: "Yes" },
+          { label: "Reproducibility", value: "With some more technical details yes" },
+          { label: "Evaluation Confidence", value: "3 - Moderately confident, I know as much as most" },
+          { label: "Overall Recommendation", value: "5 - Accept" },
+          { label: "Explanation of Recommendation", value: `I enjoyed reading about the method. It renders beautiful trees impressively fast. The paper combines many techniques to achieve the desired framerates, sometimes it is difficult to grasp what are the main performance factors. The authors hint at some bottlenecks that were noticed through experience but do not give further explanation.
+
+In Fig 3, please explain where the number 128 comes from.
+
+3.2, define what is to and from. It is possible to infer, but always better to make it clear
+Same for the splines. One can infer what is going on, but a simple fig would immediately make this entire section much more clear. It would also help to understand what the mentioned arc length in the Pixel Space paragraph refers to.
+
+In Fig 4, not clear what you mean by tesselelation factor 5.5 (6), for example.
+
+Please include some discussion about self-intersection or tree-tree intersection. Only the wall-tree intersection is mentioned, and from the video, it seems that the other intersections are not treated. This might be reasonable but should be discussed and included as a limitation if it cannot be easily tackled by the method.
+
+In the video, the tree pruning seems to not be pruning 100% of the geometry on one side of the plane. Is this just a visual impression, or is there something going on there?
+
+The fruits grow in the middle of the branches. Could this be fixed or, again, is a limitation of the method?
+
+Another point, is that if you observe how tree moves under wind force, they have very different behaviors depending on the tree type. Sometimes there are trees that are moving wildly, while others are almost perfectly still. Probably depends on branch size (or how rigid they are) and density. This might be a point to consider as future work to make the animations more realistic.` },
+        ],
+        [
+          { label: "Summary", value: "This paper proposes an extended Weber's and Penn's procedural tree model that is executed on the GPU by utilising GPU workgaphs. The proposed solution reduces the memory traffic significantly. It allows for real-time artistic control." },
+          { label: "Clarity of Exposition", value: "The paper is well written but it would benefit from a more detailed evaluation and conclusions." },
+          { label: "Technical Soundness", value: "The paper appears to be technically sound." },
+          { label: "Quality of References", value: "The citations are adequate." },
+          { label: "Reproducibility", value: "In my opinion, the work could be reproduced." },
+          { label: "Evaluation Confidence", value: "3 - Moderately confident, I know as much as most" },
+          { label: "Overall Recommendation", value: "4 - Borderline accept" },
+          { label: "Explanation of Recommendation", value: "The ideas presented in this paper are interesting, but the evaluation and the conclusion could be improved. Therefore, I give the paper a borderline accept." },
+        ],
+      ],
       cite: `@inproceedings{kuth2025tree,
   author    = {Kuth, Bastian and Oberberger, Max and Faber, Carsten and Pfeifer, Pirmin and Tabaei, Seyedmasih and Baumeister, Dominik and Meyer, Quirin},
   title     = {Real-Time {GPU} Tree Generation},
@@ -93,6 +269,72 @@
 }`
     },
     "ecc": {
+      reviews: [
+        [
+          { label: "Originality, Novelty", value: "5 (Very Good, Recommend as Full Paper)" },
+          { label: "Clarity of Presentation", value: "5 (Very Good, Recommend as Full Paper)" },
+          { label: "Technical Soundness", value: "4 (Good, Full Paper Might Be Accepted)" },
+          { label: "Importance, Utility", value: "5 (Very Good, Recommend as Full Paper)" },
+          { label: "Subject Suitability", value: "5 (Very Good, Recommend as Full Paper)" },
+          { label: "Confidence in the Evaluation", value: "4 (Very confident, know this area well)" },
+          { label: "Major Revisions Required", value: "NO" },
+          { label: "Overall Judgement", value: "5 (Very Good, Recommend as Full Paper)" },
+          { label: "Comments for the Authors", value: "The proposed method is well-formulated, with a clear explanation of the algorithm and its implementation. However, a more detailed discussion of computational complexity and comparison with deep learning-based alternatives would enhance the methodological depth." },
+        ],
+        [
+          { label: "Originality, Novelty", value: "0 (Totally Unacceptable, Strong Reject)" },
+          { label: "Clarity of Presentation", value: "5 (Very Good, Recommend as Full Paper)" },
+          { label: "Technical Soundness", value: "1 (Poor, Must Be Rejected)" },
+          { label: "Importance, Utility", value: "2 (Marginal, Short Communication)" },
+          { label: "Subject Suitability", value: "4 (Good, Full Paper Might Be Accepted)" },
+          { label: "Confidence in the Evaluation", value: "4 (Very confident, know this area well)" },
+          { label: "Major Revisions Required", value: "YES" },
+          { label: "Overall Judgement", value: "1 (Poor, Must Be Rejected)" },
+          { label: "Comments for the Authors", value: `# Paper summary
+The authors propose a GPU-friendly method for image alignment though refinement of sparse correspondences. To this goal they establish sparse correspondence pairs using an existing method and then minimize per-pixel cross-correlation between the two images following a mesh-based interpolation. Specifically, they optimize the mesh vertices using an evolutionary algorithm. The authors calibrate hyper-parameters of their method and demonstrate improvement of per-pixel cross-correlation for 4 different correspondence matchers.
+
+# Recommendation
+The paper has a clear motivation, it is well written and the results confirm that the method indeed improves cross-correlation. However, I am not convinced this is relevant in presence of powerful end-to-end image matching methods that are competitive in terms of both speed and accuracy. Critically, the authors do not compare to any such existing methods. Moreover, they do not evaluate the accuracy of their matching using any metric other than ECC which is problematic because this is simultaneously the optimization objective. Therefore, the fact that the metric value goes down during the optimization is trivial. Finally, I have concerns about novelty given the common use of cross-correlation for stereo matching and the similarity between the evolutionary algorithm here and the stochastic optimization in PatchMatch. As such, I cannot recommend accepting the paper. The authors are encouraged to show that the optimization is also improving other image metrics and that the chosen optimization method is more effective than common stereo-matching techniques in their future revision.
+
+======== Detailed Comments ==============
+
+# Strengths
+
++ The exposition is clear and I have not observed any typos.
++ The experiments are described with enough details for reproducibility.
++ The experiments include multiple datasets and baseline feature matchers.
+
+# Weaknesses
+
+- The evaluation relies solely on ECC. However, ECC is also the optimization objectives so it must go down by definition. It is not clear if this also improves other metrics (PSNR, SSIM, LPIPS,...).
+
+- The method is not compared to any recent end-to-end image matching algorithms. These algorithms typically have a sub-second runtime so it cannot be argued that the computational efficiency is a constraint. Examples:
+Liang, Zhaohuai, and Changhe Li. "Any-stereo: arbitrary scale disparity estimation for iterative stereo matching." Proceedings of the AAAI Conference on Artificial Intelligence. Vol. 38. No. 4. 2024.
+Cheng, Ziang, Jiayu Yang, and Hongdong Li. "Stereo matching in time: 100+ fps video stereo matching for extended reality." Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision. 2024.
+
+- The authors do not well justify their choice of cross-correlation for objective and evolution for an algorithm. An ablation against Euclidean loss and/or gradient descent optimization would be expected.
+
+- The stochastic algorithm is very close to PatchMatch. It should be explained how does the methodology differ and what motivates the difference.
+
+Minor suggestions:
+- Please clarify the difference between terms "visual alignment" and "visual coherence" in the abstract.` },
+        ],
+        [
+          { label: "Originality, Novelty", value: "5 (Very Good, Recommend as Full Paper)" },
+          { label: "Clarity of Presentation", value: "3 (Acceptable, Recommended as Short Paper)" },
+          { label: "Technical Soundness", value: "5 (Very Good, Recommend as Full Paper)" },
+          { label: "Importance, Utility", value: "4 (Good, Full Paper Might Be Accepted)" },
+          { label: "Subject Suitability", value: "5 (Very Good, Recommend as Full Paper)" },
+          { label: "Confidence in the Evaluation", value: "2 (Little experience in this research area)" },
+          { label: "Major Revisions Required", value: "NO" },
+          { label: "Overall Judgement", value: "5 (Very Good, Recommend as Full Paper)" },
+          { label: "Comments for the Authors", value: `Suggestions:
+Reformat Table 1 for readability (e.g., highlight key improvements, reduce decimal places).
+Compare with non-evolutionary post-processing (e.g., gradient descent, [Sor07]).
+Add statistical tests (e.g., p-values for ECC improvements).
+Discuss scenarios where runtime overhead is justified (e.g., medical imaging vs. real-time VR).` },
+        ],
+      ],
       cite: `@article{chang2025egovc,
   author  = {Chang, Thomas and Hartmann, Kay and Kuth, Bastian and Seibt, Simon and von Rymon Lipinski, Bartosz},
   title   = {{EGO-VC} -- Evolutionary {GPU}-Optimization of Visual Correspondences for Image Alignment},
@@ -106,6 +348,39 @@
     },
     "imagemorph": {
       demo: "https://www.youtube.com/embed/-CIo6EfSDUc",
+      reviews: [
+        [
+          { label: "Overall evaluation", value: `0: borderline paper
+
+In this paper, the authors proposed an image-based rendering method by multidimensional image morphing based on the image graph structure. The goal is to achieve a balance between quality and performance.
+
+In my opinion, this paper is inadequately organized as it fails to effectively highlight the main idea and contributions, particularly in Sections 3 and 4 where the method is described. Additionally, the experiments are not sound. Specific comments are given as follows.
+
+(1) In Section '3 Image Graph', the authors introduced the data structures, such as the image graph and the morphing cell, which are important for the proposed method. However, they are not clearly described. More diagrams would be helpful to clarify them.
+(2) The main contribution is the image graph structure and multi-morphing. Although the implementation is described in detail, it is necessary to clarify the benefits of using them and why they can solve the existing problems. Some technical steps should be more concise.
+(3) Although the rendering results for five scenes are shown in Fig. 11, the qualitative and quantitative comparison with existing methods, especially the state-of-the-art, is necessary to further demonstrate the contributions of the proposed method.
+(4) Two of the datasets used for evaluation are synthetic. Some image quality measurements, like SSMI and PSNR, are widely used as indicators in many IBR methods. Whether the rendering quality on the synthetic scene can be evaluated quantitatively by them?
+(5) Proofreading is required to avoid typos in the manuscript.` },
+        ],
+        [
+          { label: "Overall evaluation", value: `0: borderline paper
+
+The paper proposes an image-morphing technique that produces a novel-view image at a real-time rate which is crucial for VR applications. The high-level approach is to build triangular image patches from a sparse number of input images and to synthesize the image patches at a novel view using those in neighboring views. Also, a color correction scheme is applied to the final image so as to reduce visual seams in the output image since multiple input source images can have different brightness.
+
+The render speed is quite fast, even with an old graphics card (e.g., GTX 1050 Ti), and it indicates that the suggested method can be potentially practical for VR experiences on low-powered devices (e.g., mobile devices). The demonstrated fast speed is achieved due to its image space nature that does not rely on geometries or depth information.
+
+Nonetheless, image-warping artifacts (e.g., image distortions) are still very noticeable in the supplemental video, even with its color correction scheme. This paper misses the comparisons with previous methods, such as depth-based or neural rendering techniques, but the rendering quality of this new work may be lower than the alternatives due to the image artifacts.
+
+As a result, this framework proposes a speedy solution for novel-view synthesis, but this review also has major concerns about the paper, i.e.,  missing comparisons and warping artifacts.` },
+        ],
+        [
+          { label: "Overall evaluation", value: `0: borderline paper
+
+The paper presents a nice implementation of a classic image-based rendering approach that is capable to perform plausible view interpolation at interactive rates using GPU acceleration. The method exploits SfM and dense feature matching followed by feature point triangulation to create a set of morphing cells that are then rendered by morphing and projecting their contents, using extrapolation to fill disocclusions. While the individual contributions are definitely not new, their combination is nice and the paper well describes several adaptations and tweaks which are also not entirely novel (e.g., histogram equalization, support for spherical images) but nice to see in a system and shortening the path from theory to implementation.
+
+The paper, however, has also several weaknesses. First of all, while it covers all several pieces of the implementation, their description takes important space out of the specific contributions, which should be related (possibly) on the multi-morphing aspects. The implementation, for instance, of histogram equalization does not deserve the space currently dedicated to it, as most of the content is background material. Moreover, since view interpolation has a long history and several solutions exists, a weakness of the work is related to the lack of comparison with alternative solutions - since the results simply provide benchmarks of the proposed method.` },
+        ],
+      ],
       cite: `@article{seibt2025imagemorph,
   author  = {Seibt, Simon and Kuth, Bastian and von Rymon Lipinski, Bartosz and Chang, Thomas and Latoschik, Marc Erich},
   title   = {Multidimensional Image Morphing -- Fast Image-Based Rendering of Open {3D} and {VR} Environments},
@@ -124,6 +399,40 @@
         lang: "cpp",
         repo: "https://github.com/Bloodwyn/compressed-meshlet-paper",
       },
+      reviews: [
+        [
+          { label: "Summary", value: "The paper proposes a method for mesh compression using generalized triangle strips (GTS). The contributions include (1) a memory-efficient and GPU-time efficient data mesh representation which strives to avoid any redundancies in the index list as much as possible, (2) an algorithm to find the optimal set of GTS efficiently, and a data representation that quantizes data in floating-point numbers while avoiding cracks in the mesh.  The authors evaluate the render times and other parameters and show a substantial benefit of this approach." },
+          { label: "Clarity of Exposition", value: "The paper is well written and easy to understand." },
+          { label: "Technical Soundness", value: "The paper is technically sound." },
+          { label: "Quality of References", value: "As far as I can judge, all relevant related work is mentioned." },
+          { label: "Reproducibility", value: "The description is detailed enough to reproduce it. The authors are also planning to publish their code." },
+          { label: "Evaluation Confidence", value: "2 - Rather unconfident, but I know a bit" },
+          { label: "Overall Recommendation", value: "8 - very good" },
+          { label: "Explanation of Recommendation", value: `The paper makes a solid contribution to the compression of meshes in a way that is optimized specifically to the properties of GPUs and in particular to mesh shaders. In a concise way, it addresses a specific technical problem with both practical and theoretical aspects. I like the fact that the optimization problem is embedded into a larger theoretical framework by casting it as a mixed integer linear programming problem.
+It is interesting to see how the authors reduce the redundancies in index lists of meshes step-by-step, omitting all unnecessary information and quantizing the necessary data as carefully as posible. At the same time, the representation takes into account the rendering process and specifics of the GPU.
+A lot of the content is build on previous work [MKSS12] and adds interesting new ideas to that concept in multiple directions.
+Even though I am not an expert in this field, I was able to understand the paper and to learn a lot about the potential that the authors identified in going beyond simple index lists. Therefore, I think the paper is interesting both for specialists and for a general audience at VMV.` },
+        ],
+        [
+          { label: "Summary", value: "The authors present an algorithm for meshlet compression - a triangle mesh is split into small triangle strips, which can be efficiently decompressed in parallel by a GPU.\nThese small triangles trips are optimised before compressing to reduce the duplication of vertex attributes used by more than one triangle strip." },
+          { label: "Clarity of Exposition", value: "Exposition is good." },
+          { label: "Technical Soundness", value: "The paper looks technically sound" },
+          { label: "Quality of References", value: "References are adequate." },
+          { label: "Reproducibility", value: "The algorithm is described well." },
+          { label: "Evaluation Confidence", value: "3 - Moderately confident, I know as much as most" },
+          { label: "Overall Recommendation", value: "7 - good" },
+          { label: "Explanation of Recommendation", value: ` The algorithm is well described.
+ The set of six experiment models is not very large, but the evaluation looks very reasonable.
+
+ In section 2, the sentence "A vertex is an \\emph{index} v_i ..." is not a very good definition - a vertex has an index, but the index is just the combinatorial part of
+ its attributes, and You use a "vertex buffer" to store the geometric attributes and an "index buffer" for the indices.
+
+ In section 5, page 7 "As, on average, every second meshlet faces away... " for meshlets this is not true "on average", but it an the upper limit for the avarage.
+ It is true for the triangles, but meshlets have in most cases not a constant normal.
+ In the experiments, there is not a single example where the speed increases by a factor 2 when culling meshlets.
+ The very last sentence of section 5 shows a speed-up with culling by a factor of 1.5 instead of  2.` },
+        ],
+      ],
       cite: `@inproceedings{kuth2024tpmc,
   author    = {Kuth, Bastian and Oberberger, Max and Kawala, Felix and Reitter, Sander and Michel, Sebastian and Chajdas, Matth\\"{a}us and Meyer, Quirin},
   title     = {Towards Practical Meshlet Compression},
@@ -142,6 +451,38 @@
         lang: "cpp",
         repo: "https://github.com/GPUOpen-LibrariesAndSDKs/WorkGraphsIvyGenerationSample",
       },
+      reviews: [
+        [
+          { label: "Paper summay", value: "The paper describes a system for generating and drawing procedural geometry with the example of a market place scene. They describe multiple systems for adding various details to the scene. The authors use the novel workgraphs API and provide a nice introduction to the API." },
+          { label: "Overall evaluation", value: `-2: reject
+
+I think the paper is very well written and it covers a very interesting use case of a brand new API. For a reader unfamiliar with workgraphs, it serves as a great introduction. However, I do not think that the article in its current form works as a research paper. I don't think there is sufficient scientific contribution in the article which is why I suggest rejection.
+
+Neither does the article explore/evaluate different options in the design space of work graphs, nor does it compare to any of the methods mentioned in the related work section. The evaluation in the paper is very brief, and without any point of reference I find it very hard to attach any interpretation to the performance numbers. The novelty appears to be mostly in the application of the workgraphs API in one very specific use case.
+
+I think the article should be published, but I think it would be a much better fit as a technical report or a chapter in a book of graphics programming techniques instead of a scientific conference.` },
+          { label: "Completeness of references", value: "I am not deeply familiar with the relevant literature but I think all the important relevant works are discussed." },
+        ],
+        [
+          { label: "Paper summay", value: "This paper explores use cases for the recently released work graph feature, and demonstrates capabilities and performance via procedural ivy, marketplace, and ground clutter generation methods." },
+          { label: "Overall evaluation", value: `1: weak accept
+
+I would argue for acceptance based on this paper being an interesting case study of a novel, cutting-edge hardware feature with some inspiring results. The demonstration video also did a good job of demonstrating use cases in real-time editing of scenes.
+
+In general, the examples remind of Blender's geometry nodes, but instead of precomputing and baking the results, the work graphs recompute results each frame and thus allow for instant modification and parameter adjustments of geometry nodes.
+
+The inclusion of ray casting in the procedural construction is very interesting. This is something that seems like it would distinguish it from the capabilities of persistent threads. At least I am not aware of whether persistent thread approaches can easily integrate hardware-ray-tracing.
+
+While something like the marketplace could arguably be stored more efficiently in some form of static draw buffer while it's not being manipulated, the on-demand procedural generation of vegetation and clutter definitely makes sense as it could otherwise take up large amounts of memory if stored explicitly.
+
+A weakness of the paper is the brief evaluation with lack of comparison to other methods. Furthermore, ivy and marketplace generation times might be considered too high for actual games so instead of recreating them each frame, they would probably be better off created once (potentially over multiple frames) and stored in a static draw buffer (but one that still allows frustum culling). On the other hand, comparing to other methods may prove difficult since they can be used for the proposed scenarios, but there are no exact related works so I will consider this a weakness but not a show stopper.
+
+
+minor suggestion:
+Fig 11a: Add spaces to improve legibility: "79,710/79,710" => "79,710 / 79,710"` },
+          { label: "Completeness of references", value: "seems good" },
+        ],
+      ],
       cite: `@article{kuth2024generation,
   author  = {Kuth, Bastian and Oberberger, Max and Faber, Carsten and Baumeister, Dominik and Chajdas, Matth\\"{a}us and Meyer, Quirin},
   title   = {Real-Time Procedural Generation with {GPU} Work Graphs},
@@ -162,6 +503,82 @@
         lang: "cpp",
         repo: "https://github.com/Bloodwyn/edgefriend-supplemental",
       },
+      reviews: [
+        [
+          { label: "Summary", value: "This submission presents an efficient data structure and algorithm for Catmull-Clark subdivision on GPU. \nBy leveraging on specific data-layout, the proposed data structure allows to implicitly access to the neighborhood information needed for subdivision while improving memory consumption and data locality wrt to previous state of the art. \nThe proposed algorithm then uses this data structure in a single subdivision kernel dispatch on GPU that minimizes the use of synchronization barrier and do not requires atomic FP32 operations.\nThe evaluation of the proposal shows its usefulness for realtime subdivision and rendering." },
+          { label: "Clarity of Exposition", value: `The exposition is clear and gives most of the required details for understanding and implementing the proposed algorithm and data structure.
+I've nevertheless some concerns with the exposition.
+     - I found the "deterministic" aspect an over-claim about the proposed algorithm properties (subdivision is clearly not a stochastic process) and the authors should remove this from the title.
+     - It is unclear for me how is computed the level d=0 input. Is this level the result of the pre-processing step? I think yes in order to have a correct edge-friend data structure but this should be made clearer before being said in section 4.
+     - Details on how is built the initial edge_friend data structure during this preprocessing step should also be given as the sentence " ... as their initial control meshes already comply with our on-off-edge rule after rotating every second quad" (section 4), is not self-explicit about what is "rotating every second quad" and the way the initial data_structure is computed in the other case is not described.
+     - If the mesh is animated, I understand that the animation should be performed on the initial mesh, then the pre-processing generates a quad-only mesh suitable for subdivision. This implies that the pre-processing step must be computed at each frame. If the animation itself is computed on the GPU, this will require to implement two different subdivision kernels and data structures (one for the preprocessing, and the proposed edge-friend method for subdivision). This might be a concern for some applications and a limitation of the proposed method that is not self-sufficient. Discussion about this should be added in the paper.` },
+          { label: "Technical Soundness", value: "Yes" },
+          { label: "Quality of References", value: "Seems good" },
+          { label: "Reproducibility", value: "The proposed algorithm should be reproduced from the given description without too much difficulties. \nNevertheless, in case of acceptance, I encourage the authors to publish the shader code and the code allowing to reproduce the figures as they will be of great interest." },
+          { label: "Evaluation Confidence", value: "3 - Moderately confident, I know as much as most" },
+          { label: "Overall Recommendation", value: "4 - Borderline accept" },
+          { label: "Explanation of Recommendation", value: "I like this paper as it exposes a simple but valuable data structure and algorithm allowing to implement fast Catmull-Clark subdivision on the GPU. \nThe proposal is well presented and easy to follow. The evaluation of the results shows very good performances and a clear improvement over the state of the art.\nI've some minor concerns about the content, thus my borderline accept recommandation, as exposed above, but these should be fixed in the second submission phase.\nIn case of acceptance, I encourage the author to publish their code allowing to reproduce the figures to augment the impact of the proposal." },
+        ],
+        [
+          { label: "Summary", value: `This paper introduces two important improvements for computing breadth-first Catmull-Clark subdivision on quad-only meshes in parallel. The first improvement is a novel data-structure called "edge-friend" to represent the topology of the mesh at each subdivision step. The main benefit of edge-friend is that it requires less memory than state-of-the-art data-structures. In practice, this reduced memory consumption reduces the bandwidth of breadth-first subdivision and the authors show that they can speed-up computations by a factor of three. A potential downside of the approach is that it requires to introduce ghost faces, vertices and edges. In practice however, the authors show that this wasted computation still leads to better performances than waste-free methods and describe an efficient mesh-shader based implementation for rendering the resulting geometry. The second contribution is a better locality for the vertex points produced by the subdivision. This is accomplished by systematically interleaving vertex, face and edge points rather than concatenating them as is done in previous work. This paper is perfectly suited for HPG in my opinion. And I also really liked the vectorial teaser :)` },
+          { label: "Clarity of Exposition", value: "The exposition is clear. The only thing I would suggest is to add at the beginning of Section 3 (or 3.1 ?) that the treatment of boundaries is detailed in Section 3.5. (personally, I was frustrated to not know how boundaries were handled while reading section 3)." },
+          { label: "Technical Soundness", value: "Yes." },
+          { label: "Quality of References", value: "Fine." },
+          { label: "Reproducibility", value: "Fine." },
+          { label: "Evaluation Confidence", value: "5 - Extremely confident, I consider myself an expert" },
+          { label: "Overall Recommendation", value: "6 - Strong accept" },
+          { label: "Explanation of Recommendation", value: `Like I said in my summary, this paper is perfectly suited for HPG.
+
+I do have two issues with the current paper, but I think the authors can easily address them:
+
+1) I don't like weak claims in scientific papers and so I have a problem with the claim that atomic operations "may" or "can" produce flickering artifacts. It occurs twice in the paper:
+- "With floating-point arithmetic not being associative, flickering artifacts can occur, even between frames with identical inputs"
+- "Unlike our approach, atomic-operations may cause flickering artifacts because of their non-deterministic scheduling."
+I agree that atomic operations are non-deterministic. But it remains to be proven that this particular non-determinism leads to actual rendering artifacts (I am pretty skeptical because the range of variation is restricted to the precision of floats, and should be imperceptible in practice). Since such artifacts are not shown in this paper (nor in any previous work), I would refrain from claiming they are an issue. I would ask the authors to either:
+- provide a video that showcases these artifacts and then reformulate the claim into a solid one
+- or remove the claim entirely (but it's fine to keep the fact that computation are non-deterministic)
+
+2) I would like to have a more thorough performance measurement of the CPU pre-processing algorithm for non-quad meshes. Currently the paper only states that the algorithm runs in ~1.2ms on a mesh composed of 1,308 faces (Section 4). I would like to see how this performance scales with mesh complexity. To this end, it would be interesting to run the algorithm on, e.g., the ArmorGuy asset and the Pixar's Kitchen scene.` },
+        ],
+        [
+          { label: "Summary", value: "The paper proposes a new data structure for quad meshes which provides efficient access to neighborhood information. This allows for efficiently implementing iterative breadth-first Catmull-Clark subdivision of quad-meshes without the need of atomic floating point operations." },
+          { label: "Clarity of Exposition", value: "Table 1 could list a reduction factor per model." },
+          { label: "Technical Soundness", value: "It's technically sound." },
+          { label: "Quality of References", value: "Seems fine to me." },
+          { label: "Reproducibility", value: "The addressing scheme is pretty clear." },
+          { label: "Evaluation Confidence", value: "5 - Extremely confident, I consider myself an expert" },
+          { label: "Overall Recommendation", value: "3 - Borderline reject" },
+          { label: "Explanation of Recommendation", value: `I'm on the fence with the proposed approach. On one hand, the new addressing scheme is pretty neat and efficient. On the other hand, the limitation of non-adaptive breadth-first subdivision is severe because it will either prevent rendering of bigger real-world subdiv models due to memory capacity requirements or, assuming it fits somehow into GPU memory, the subdivision and rendering performance will be completely limited by memory bandwidth. Going completely breath-first always requires to store intermediate results in GPU memory and additionally will prevent to use HW-support. One can see the performance impact in Figure 6 where the subdivision and rendering of the bigger "Car" model requires 3.7-4.7 ms. With adaptive subdivision this model would render way faster.
+
+What I'm also missing is a performance and memory consumption comparison against a patch-based approach where in control mesh is converted into a set of b-spline patches and as approximation for the irregular faces a set of Gregory patches. As the author state, direct patch evaluation is (a) faster and (b) does not required to store out intermediate data to memory.
+
+It would be interesting to see whether one could adapt the approach to process a quad plus its 1-ring independently from the other quads. The problem I see is that the vertex update rule is likely not order independent, which means neighboring quads will come to a different result depending on the start vertex.
+
+I'm also missing a comparison against: "Subdivision-Specialized Linear Algebra Kernels for Static and Dynamic Mesh Connectivity on the GPU" which actually does support crack-free adaptive subdivision, and seems to be the state-of-the-art in terms of performance and dense data structures for storing adjacency information.
+
+Minor issues:
+- Line numbers would have been helpful.
+- "Task Merge": Single synchronization barrier between each subdivision iteration.
+  This is provided by the single kernel launch, correct?
+- Depending on the HW architecture synchronization barriers to not necessarily lead to cache flushes.` },
+        ],
+        [
+          { label: "Summary", value: "This paper proposes a new data structure for Catmull-Clark subdivision surface refinement. It can achieve faster subdivision speed with a lightweight data structure, atomic-free, and lower synchronization overhead. The related works were well organized, and their pros and cons were well described. and the proposed algorithm and experimental data were well presented. The subdivision surface recently gets more important as micropolygon rendering is popularly used in the graphics industry. In this context, this paper is timely and well-fit for HPG topics." },
+          { label: "Clarity of Exposition", value: `This paper is basically well organized. The introduction section described the motivation of this research by pointing out well the problems of existing solutions. Well-described how the proposed method solves these problems concisely. Section 3 formulates the algorithm well with appropriate pseudocode and formulas.
+
+It would be better if the paper would show how the proposed algorithm impact on rendering. It would be better for the reader if the paper would show more how the proposed algorithm impact on rendering. This paper focused on the subdivision method itself, but it'd make this paper more solid if the related information is provided. An image that visualizes the description of section 3.6 will be beneficial.
+
+In the experiment,
+1. The test scenes are relatively small. In order to make the proposed algorithm more robust, it needs to prove it by using more variety ranges of complex scenes (10>M verts).
+2. Why did not the overall performance (Figure 6) compare to the reference (DV21)? Is the rendering time the same as the reference? Otherwise, provide the comparison. Even if this paper focused on the subdivision method itself, it needs to show how it impacts the rendering. Also, this should decompose subdivision and rendering timings, not the current compound form.` },
+          { label: "Technical Soundness", value: "Yes" },
+          { label: "Quality of References", value: "Yes" },
+          { label: "Reproducibility", value: "Yes, it contains enough information to reproduce." },
+          { label: "Evaluation Confidence", value: "2 - Rather unconfident, but I know a bit" },
+          { label: "Overall Recommendation", value: "4 - Borderline accept" },
+          { label: "Explanation of Recommendation", value: "This paper was basically well organized as a technical paper: motivation, related works, core algorithms, and data-backed justifications (and intuitive demo video). There's one exception that one missing information about rendering. If this missing information will be added, it will make it perfect." },
+        ],
+      ],
       cite: `@article{kuth2023edgefriend,
   author  = {Kuth, Bastian and Oberberger, Max and Chajdas, Matth\\"{a}us and Meyer, Quirin},
   title   = {Edge-Friend: Fast and Deterministic {Catmull-Clark} Subdivision Surfaces},
@@ -180,6 +597,66 @@
         lang: "glsl",
         repo: "https://github.com/MomentsInGraphics/vulkan_renderer",
       },
+      reviews: [
+        [
+          { label: "Metareview", value: "Congratulations. The reviewers are in agreement that you paper suggests an interesting solution to an important problem. For your final version, please go through the reviews and try to answer all questions posed by the reviewers. Specifically, we would like you to supply more context early on so that the algorithm is clear to the reader before diving into details. We would also like to see some discussion on the practical implications of being able to drive animation with 13 bones per vertex, and some data on how this approach compares to simpler, more straightforward alternatives (such as simply using fp16 data types or even 8 bit fixed point for bone weights)" },
+        ],
+        [
+          { label: "Summary", value: `The authors present a compression scheme for per-vertex blending information. Each vertex requires a set of blend weights and bone indices. Blend weights are in the range [0, 1] and sum to one. The paper stipulates that blend weights always occur in ascending order. This order can be recovered through sorting. With this, the order in which weights are stored physically encodes a permutation index. By choosing this index, one can use the corresponding permutation to store additional data.
+
+Similar to previous work, the proposed scheme uses a table of unique bone index tuples. Sorting weights instead of bone indices makes this table larger than some other methods; the paper proposes to reduce the size of this table again by determining "irrelevant" indices when determining the unique tuples. With the table, each vertex needs to store a set of weights and a single index, identifying a unique bone index tuple entry.
+
+To do so, the paper proposes a quantization method that stores weights w_i as two parts: a_i and b_i. The b_i and the bone tuple index are encoded in a payload, which is stored partially by the permutation of the a_i. The permuted a_i are stored explicitly together with the rest of the payload.` },
+          { label: "Clarity of Exposition", value: "Fairly clear.\n\nSection 3.5: Is A also determined by the brute force search or is it prescribed upfront with the total bit width and minimum number of supported tuple indices?" },
+          { label: "Technical Soundness", value: "The method seems sound." },
+          { label: "Quality of References", value: "References are OK." },
+          { label: "Reproducibility", value: "Method seems reproducible. Authors have provided code that compiles and runs." },
+          { label: "Overall evaluation", value: "SCORE: 3 (strong accept)" },
+          { label: "Explanation of Recommendation", value: `The paper focuses on compressing blend weights and presents a method that does exactly this. The method provides a better compression (in terms of compression rate vs. error) than competing methods. Performance is comparable to other methods, only starting to lose out slightly at higher bone counts. It nevertheless outperforms a naive implementation due to reduced memory bandwidth. Trading lower memory bandwidth for a slight increase in compute is typically worthwhile, which is in favour of the proposed method.
+
+While it's difficult to see the method being applied as-is to other data (on account on relying on properties that seem very specific to blend weights), the paper brings several novel and fresh ideas to the table. These are interesting in their own right.
+
+I would suggesting giving more context early on (e.g. in the Introduction). For example, mentioning the overall vertex layout (Section 4.3; total of 128 bits) will likely help a broader audience understand that compressing blend weights in the proposed manner has a significant impact and give some insight into the relative cost of using 32 or 64 bits (and additionally underscore that naively storing the weights is indeed much much more expensive).` },
+        ],
+        [
+          { label: "Summary", value: `This work describes a novel technique for efficient representation of attributes for skinned animation (blend weights and bone indices) that can compactly encode information about a large number of bones in fixed per vertex storage. The paper integrates interesting ideas in the areas of data encoding and compression and includes a fairly rigorous analysis on the approaches used in the context of applying them to coding of skinning attributes.
+
+The encoding technique is based on two key insights presented in the paper: the ordering of a set of weights per vertex can be chosen arbitrarily, and thus a particular choice of that ordering can carry information to the decoder; weights can be transformed linearly prior to quantization, which increases their effective range and allows the quantization to be carried out independently for each weight, minimizing the overall error. Additionally, authors precompute the set of unique bone index tuples offline, which results in having to store only a single index into the table per vertex.
+
+The main contribution of the approach is that it allows to lift the often used restriction on the maximum number of bones that can affect any single vertex in an animation system. It is typical for the state of the art real-time rendering systems to limit that number to a fairly low value (e.g. 4), out of performance and memory footprint concerns, which limits artistic freedom and the content creation pipeline. The system described in the paper can practically support up to 13 bones per vertex encoding all relevant attributes in as little as 64 bits, enabling higher-quality real-time skinning animation.` },
+          { label: "Clarity of Exposition", value: `The general structure of the paper is solid, the problem statement and the key ideas are presented clearly with progressively increasing level of detail. The section on permutation coding and the use of Lehmer codes could benefit from a better explanation, though. In particular, the construction of Lehmer codes is probably better described as a sequential process of assigning indices to elements still remaining in the list and then representing the result as a single number in factorial base. A couple of concrete examples would help the clarity here. The mention of concatenating sequence indices with weights while sorting and the reference to register spilling can be confusing to some readers. Similarly, the section on blend weight transformation could probably use some diagrams to build a better geometric intuition of the transform.
+
+The choice of the illustration on the front page is somewhat questionable and feels arbitrary - while the depicted transform is one of the key contributions of the paper, it feels a bit out of place as a title illustration.` },
+          { label: "Technical Soundness", value: `The method is technically sound and authors provide rigorous analysis of the presented techniques, including rounding error propagation through the transforms, quantization of weights, and bit allocations for various possible configurations of the system (number of supported bones and the bit budget). Some of the parameters are determined through exhaustive search.
+
+The method used for evaluation of performance benefit of the presented technique uses a full rendering application that implements skinned animation on a geometrically complex scene and a micro-benchmark that targets evaluating the cost of the encoding and decoding as a separate process. While the authors provide comparisons against using uncompressed weights in the rendering application (simply storing the weights as arrays of floats), no such comparison is done in the micro-benchmark. I think it will be informative to include a comparison between the naive approach of fetching uncompressed data from memory vs saving that extra bandwidth and instead relying on reconstructing the weights in the GPU kernel.` },
+          { label: "Quality of References", value: "The list of references seems fairly comprehensive and adequate. It is nice to see a reference to a paper from 1826 at the top of the list." },
+          { label: "Reproducibility", value: "The information provided in the paper is sufficient for anyone skilled in the art to build the described system. Authors also provide complete implementations of the encoder and the decoder in the form of python and GLSL code as supplemental material." },
+          { label: "Overall evaluation", value: "SCORE: 2 (accept)" },
+          { label: "Explanation of Recommendation", value: `I think this submission provides a good example of how a few simple ideas can be integrated in a synergetic way to build a practical system that tries to accommodate some of the constraints of popular rendering architectures (limited number of per-vertex attributes, memory bandwidth bottlenecks).  The rigor demonstrated by the authors in the construction of the algorithms, the reasoning behind and the analysis of the various design choices is definitely one of the strengths of the paper. The problem authors address is practically relevant, and it is nice to see algorithmic improvements in important applications (skinned animation in this case) being tailored towards the trajectory of the rendering hardware, rather than simply expecting extensive improvements in raw horsepower to become practical.
+
+At the same time,  I have some concerns around the scale of the impact this technique can make, compared to the state of the art. While permuting a large number of weights does allow to encode an interesting number of extra bits of information, it is less clear that the complexity of the reconstruction approach is worth it when the number of bones is low (like 4 or 8). Performance advantages of the proposed compression scheme are also not as obvious in that case, especially considering that in the naive approach the blend weights can simply use more compact data types, like 16-bit floats, which would cut the bandwidth requirements in half.
+
+It would also be good to include at least some discussion around the benefits of using a very large number of weights per vertex (which is the regime where the system really shines). What are the situations that require 13 bones affecting a single vertex? It's probably more relevant to compare the resulting animation quality between using all 13 bones vs picking e.g. top 4, as compared to the discussion on the error analysis due to quantization and compression (which is great from the technical perspective!).
+
+It may also be possible that simple tweaks to the naive implementation (e.g. fetching the weights from memory vs passing them down as per-vertex attributes) can have substantial impact on the baseline performance. The compute micro-benchmark can help isolate that tradeoff somewhat better, as I mentioned above.` },
+        ],
+        [
+          { label: "Summary", value: `The paper addresses the problem of compressing attributes for vertex blending (skinning). With character rigs becoming ever more complicated and the number of triangles for skinned meshes ever increasing, this is an important problem that seems to have seen surprisingly little attention in previous work. In fact the authors claim only one previous work to exist that directly deals with the problem (I am not able to confirm or deny that statement, but googling quickly did not show me any other work that needs comparing to).
+
+My understanding of the suggested method is as follows:
+Sort the weights w0...wn (bone indices are stored in this order). Since the largest weight need not be stored, the weight vector is now within the tetrahedron in Fig 1a. Transform the weights (shear the tetrahedron) so that the weights instead lie within the sixth of the unit cube as in Fig 1b. Each axis of this unit cube is assigned a specific precision and thus one specific permutation of the weights will have the smallest error. I think the permutation is found by assigning more bits to the consecutive weights with the largest distance (this is the Lehmer code stuff in algorithms 1 and 2) which boils down to O(n) where n is the number of weights. Since the weights were originally sorted, any permutation can be undone and each vertex can get its correct weight. The weights are quantized as aB + b where B has a certain number of bits for each axis (its precision) and b is a constant-bit small number that interpolates between these divisions. Additionally, as in previous work
+, the authors make use of the fact that many vertices will share the set of bone indices, and so, for each vertex, they need only store a tuple index and the b values.
+
+The evluation shows the method performing well w.r.t. error in most cases, when compared to previous work and at competetive framerates.` },
+          { label: "Clarity of Exposition", value: `The language is very good, and I have no problems with the text as such. The introduction and previous work sections also motivate the paper well. However, I must admit I found the method extremely hard to understand. I do not think there is anything wrong with the existing text, but, in my opinion, it suffers badly from not having an easily understandable overview of the algorithm. It starts by describing how permutations are performed and stored compactly for two pages before we get any hint as to _why_ the permutations are necessary. In the introductory problem statement the actual compression scheme is completely avoided. Sentences like: "We encode the tuple index and 'a few other quantities'" in 3.1 and "Based on 'another attribute', we pick one..." in the Figure 1 caption, are probably meant to hide complexity but also fail to convey the method clearly.` },
+          { label: "Technical Soundness", value: "I believe the paper to be technically sound. The only thing I found a bit surprising was that the test scene consists of 28 characters merged into a single model with 1412 bones. I do not understand the rationale behind this." },
+          { label: "Quality of References", value: "The previous work section looks good to me." },
+          { label: "Reproducibility", value: `I strongly believe that the results _can_ be reproduced from the information in the paper. And there is a lot of error analysis and other goodies (including source code) that should be applauded. As previously stated, it would not be an easy task however, because all of the details make it very hard to see the "whole picture".` },
+          { label: "Overall evaluation", value: "SCORE: 2 (accept)" },
+          { label: "Explanation of Recommendation", value: "With my current understanding of the method, I believe it to be a very good candidate for weight compression, and the approach was new to me and very interesting. I would still urge the authors to _please_ attempt to start with an easy to understand early overview of the algorithm, before diving in to details." },
+        ],
+      ],
       cite: `@article{peters2022vbacplus,
   author  = {Peters, Christoph and Kuth, Bastian and Meyer, Quirin},
   title   = {Permutation Coding for Vertex-Blend Attribute Compression},

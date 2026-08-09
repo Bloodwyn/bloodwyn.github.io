@@ -29,6 +29,7 @@ function renderPaperBar(slug, activeTab) {
         meta.demo          && { id: 'demo',          label: 'Demo'          },
         meta.code          && { id: 'code',          label: 'Code'          },
         ...(meta.extras || []),
+        meta.reviews       && { id: 'reviews',       label: 'Reviews'       },
         { id: 'cite',         label: 'Cite'          },
     ].filter(Boolean);
 
@@ -118,6 +119,54 @@ function loadCite(bibtex) {
       </div>`;
 }
 
+const REVIEWS_NOTE = `These are the real, anonymized reviews this paper received before it was accepted for publication. A few papers on this site scored quite low with individual reviewers, and some of those went on to win Best Paper awards anyway. If your own reviews feel harsh, try not to take them too personally: it happens to everyone, and it doesn't mean your work is worthless.`;
+
+function loadReviews(reviews) {
+    // "Overall Recommendation" (COMFy), "Overall evaluation" (EasyChair), and "Overall
+    // Judgement" (WSCG) all promote to the header pill. EasyChair's value is "verdict\n\n
+    // full explanation" in one field, so only the verdict line becomes the pill; the
+    // explanation stays in the card body instead of being dropped.
+    const pillClass = v => /reject/i.test(v) ? 'pill-red'
+        : /weak|borderline|marginal|dubious/i.test(v) ? 'pill-amber'
+        : /accept|good|acceptable|excellent/i.test(v) ? 'pill-green'
+        : 'pill-gray';
+
+    // A review entry whose sole field is labeled "Metareview" is an area-chair summary,
+    // not a numbered reviewer; it gets its own header and isn't counted in "Reviewer N".
+    let reviewerNum = 0;
+    const cards = reviews.map(fields => {
+        const isMeta = fields.length === 1 && fields[0].label === 'Metareview';
+        const headerLabel = isMeta ? 'Metareview' : `Reviewer ${++reviewerNum}`;
+        const rec = isMeta ? null : fields.find(f => f.label === 'Overall Recommendation' || f.label === 'Overall evaluation' || f.label === 'Overall Judgement');
+        let verdict = '', bodyFields = fields;
+        if (rec) {
+            const nl = rec.value.indexOf('\n');
+            verdict = nl === -1 ? rec.value : rec.value.slice(0, nl);
+            const remainder = nl === -1 ? '' : rec.value.slice(nl).replace(/^\n+/, '');
+            bodyFields = fields
+                .map(f => f === rec ? (remainder ? { label: f.label, value: remainder } : null) : f)
+                .filter(Boolean);
+        }
+        return `<div class="review-card">
+          <div class="review-card-header">
+            <span class="review-reviewer">${headerLabel}</span>
+            ${rec ? `<span class="review-pill ${pillClass(verdict)}">${e(verdict)}</span>` : ''}
+          </div>
+          ${isMeta
+            ? `<div class="review-value">${e(bodyFields[0].value)}</div>`
+            : bodyFields.map(f => `<div class="review-field">
+              <div class="review-label">${e(f.label)}</div>
+              <div class="review-value">${e(f.value)}</div>
+            </div>`).join('')}
+        </div>`;
+    }).join('');
+
+    viewer.innerHTML = `<div class="reviews-wrap">
+      <div class="reviews-note">${REVIEWS_NOTE}</div>
+      ${cards}
+    </div>`;
+}
+
 function loadTab(slug, tab) {
     const meta = (typeof papers !== 'undefined') ? papers[slug] : null;
     const pdfPath = slug.includes('.') ? `${PAGE_FOLDER}/${slug}` : `${PAGE_FOLDER}/${slug}.pdf`;
@@ -139,6 +188,9 @@ function loadTab(slug, tab) {
             break;
         case 'code':
             if (meta.code) loadCode(meta.code.url, meta.code.lang, meta.code.repo);
+            break;
+        case 'reviews':
+            if (meta.reviews) loadReviews(meta.reviews);
             break;
         case 'cite':
             loadCite(meta.cite || '');
