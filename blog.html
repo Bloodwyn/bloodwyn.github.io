@@ -3,9 +3,15 @@
 <head>
   <meta charset="utf-8">
   <title>Bastian Kuth | Blog</title>
-  <meta http-equiv="refresh" content="0; url=/blog/gpudynamicwork/">
+  <!-- Static fallback for no-JS; BLOG_POSTS[0] (newest-first, see posts.js)
+       overrides this below whenever JS is available. -->
+  <meta http-equiv="refresh" content="0; url=/blog/gpulandscape/">
+  <script src="/blog/posts.js"></script>
+  <script>
+    if (typeof BLOG_POSTS !== 'undefined' && BLOG_POSTS[0]) location.replace(BLOG_POSTS[0].url);
+  </script>
 </head>
 <body>
-  <a href="/blog/gpudynamicwork/">Redirecting…</a>
+  <a href="/blog/gpulandscape/">Redirecting…</a>
 </body>
 </html>

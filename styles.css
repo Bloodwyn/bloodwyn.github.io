@@ -38,6 +38,11 @@ body, html {
   font-size: .85rem; transition: .15s;
 }
 .sidebar button:hover { background: #e6e6e6; }
+.sidebar button.current {
+  background: #333; color: #fff; border-color: #333; cursor: default;
+  box-shadow: 0 1px 4px rgba(0,0,0,.25);
+}
+.sidebar button.current:hover { background: #333; }
 #viewer-col {
   flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0;
 }

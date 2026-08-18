@@ -203,6 +203,18 @@ function loadTab(slug, tab) {
     }
 }
 
+// Highlights whichever sidebar button matches the current slug, the same
+// ".current" class/style the blog posts use for their own cross-post nav
+// (see blog/sidebar.js) -- one shared convention for "you are here" instead
+// of two different-looking ones.
+function updateSidebarHighlight(currentSlug) {
+    document.querySelectorAll('.sidebar button').forEach(btn => {
+        const match = (btn.getAttribute('onclick') || '').match(/location\.hash\s*=\s*(['"])(.*?)\1/);
+        const btnSlug = match ? match[2].split('/')[0] : null;
+        btn.classList.toggle('current', btnSlug === currentSlug);
+    });
+}
+
 function loadFromHash() {
     const { slug, tab } = parseHash();
 
@@ -214,6 +226,7 @@ function loadFromHash() {
 
     renderPaperBar(slug, tab);
     loadTab(slug, tab);
+    updateSidebarHighlight(slug);
 }
 
 window.addEventListener('hashchange', loadFromHash);
