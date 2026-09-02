@@ -278,7 +278,6 @@ const COLS = [
   { id: 'levelzero', label: 'Level Zero (Intel)'   },
   // AMD
   { id: 'mantle',    label: 'Mantle (AMD, historical)' },
-  { id: 'pal',       label: 'PAL (AMD)'            },
   { id: 'hip',       label: 'HIP (AMD)'            },
 ];
 
@@ -402,6 +401,22 @@ const cards = [
     version: 'VK_EXT_device_generated_commands',
     info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">N</span> dispatches of a <span style="font-weight:600">set of pipelines</span> using size, constants, binding, and PSO arguments from a <span style="font-weight:600">GPU buffer</span>. Count N is <span style="font-weight:600">dynamic</span>.`,
   },
+  {
+    col: 'directx', cat: 'device-generated-commands', yBand: 5,
+    url: 'https://microsoft.github.io/DirectX-Specs/d3d/WorkLists.html',
+    name: 'DispatchList',
+    version: 'D3D12 Work Lists Tier 1 (preview ~2027)',
+    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">N</span> dispatches of a <span style="font-weight:600">set of pipelines</span> using size, constants, binding, and PSO arguments from a <span style="font-weight:600">GPU buffer</span>. Count N and PSO per record are <span style="font-weight:600">dynamic</span>.`,
+  },
+
+  // ── yBand 6: command buffer control flow ─────────────────────────────────
+  {
+    col: 'directx', cat: 'command-buffer-scheduler', yBand: 6,
+    url: 'https://microsoft.github.io/DirectX-Specs/d3d/WorkLists.html',
+    name: 'DispatchList (continuations)',
+    version: 'D3D12 Work Lists Tier 2 (preview ~2027)',
+    info: `A <span style="font-weight:600">shader-writable</span> GPU virtual address points to the <span style="font-weight:600">next</span> work list to be executed after the current one. Allows for a <span style="font-weight:600">dynamic number of chain steps</span> without CPU round-trip.`,
+  },
 
   // ── yBand 4: geometry amplification ──────────────────────────────────────
   {
@@ -520,36 +535,6 @@ const cards = [
     name: 'Command Buffer Control Flow',
     version: 'Mantle GR_CONTROL_FLOW ext (2014)',
     info: `The <span style="font-weight:600">GR_CONTROL_FLOW</span> extension adds <span style="font-weight:600">IF/ELSE</span> and <span style="font-weight:600">WHILE</span> blocks to the command buffer, with the condition read from a <span style="font-weight:600">GPU buffer</span> at execution time. Combined with <span style="font-weight:600">grCmdDispatchIndirect</span>, dispatch size is also GPU buffer-driven, letting a recorded command buffer act as a <span style="font-weight:600">GPU-driven scheduler</span> with no CPU round-trip.`,
-  },
-
-  // ── PAL (AMD) ────────────────────────────────────────────────────────────
-  {
-    col: 'pal', cat: 'indirect-single', yBand: 1,
-    url: 'https://github.com/GPUOpen-Drivers/pal/blob/dev/inc/core/palCmdBuffer.h',
-    name: 'CmdDraw[Indexed]Indirect<br>CmdDispatchIndirect',
-    version: 'PAL Core',
-    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">one</span> dispatch for the <span style="font-weight:600">current</span> pipeline using size arguments from a <span style="font-weight:600">GPU buffer</span>.`,
-  },
-  {
-    col: 'pal', cat: 'indirect-binding', yBand: 4,
-    url: 'https://github.com/GPUOpen-Drivers/pal/blob/dev/inc/core/palCmdBuffer.h',
-    name: 'CmdExecuteIndirectCmds',
-    version: 'PAL Core',
-    info: `<span style="font-weight:600">One</span> CPU call issues <span style="font-weight:600">N</span> dispatches for the <span style="font-weight:600">current</span> pipeline using size, constants, and binding arguments from a <span style="font-weight:600">GPU buffer</span>. Count N is <span style="font-weight:600">dynamic</span>.`,
-  },
-  {
-    col: 'pal', cat: 'mesh-shaders', yBand: 7,
-    url: 'https://github.com/GPUOpen-Drivers/pal/blob/dev/inc/core/palCmdBuffer.h',
-    name: 'CmdDispatchMesh[Indirect]',
-    version: 'PAL Core (GFX10.3+)',
-    info: `One GPU task/amplification thread group emits <span style="font-weight:600">one</span> <span style="font-weight:600">dynamic</span> dispatch grid of <span style="font-weight:600">mesh thread groups</span> together with a <span style="font-weight:600">small payload</span>.`,
-  },
-  {
-    col: 'pal', cat: 'work-graphs', yBand: 8,
-    url: 'https://github.com/GPUOpen-Drivers/pal',
-    name: 'Shader Enqueue',
-    version: 'PAL Core (GFX11+, internal)',
-    info: `An <span style="font-weight:600">Execution Graph</span> is a <span style="font-weight:600">DAG</span> of shaders where edges define which nodes can create work for others. Work can be parametrized with a <span style="font-weight:600">small payload</span> and created as <span style="font-weight:600">per thread</span>, <span style="font-weight:600">multiple threads in a group</span>, or as a whole <span style="font-weight:600">static or dynamic grid</span>. Launched <span style="font-weight:600">children</span> can <span style="font-weight:600">overlap</span> with parent execution. Internal substrate beneath VK_AMDX_shader_enqueue and D3D12 Work Graphs.`,
   },
 ];
 
